@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block naslov %}Core algoritmi · Enkripcijski algoritmi{% endblock %}
+
+{% block sadrzaj %}
+<h1>Core algoritmi</h1>
+<p class="podnaslov">
+    Šifruj i dešifruj tekst bilo kojim od šest implementiranih algoritama.
+    Sve se izvršava stvarno, kroz kod iz <code>core/</code>.
+</p>
+
+<div class="panel">
+    <div class="mreza mreza-2" style="align-items:end">
+        <div>
+            <label for="izbor-algoritma">Algoritam</label>
+            <select id="izbor-algoritma">
+                {% for grupa, stavke in algoritmi_po_grupi.items() %}
+                <optgroup label="{{ grupa }}">
+                    {% for a in stavke %}
+                    <option value="{{ a.id }}">{{ a.naziv }}</option>
+                    {% endfor %}
+                </optgroup>
+                {% endfor %}
+            </select>
+        </div>
+        <div id="meta-algoritma" class="prigusen"></div>
+    </div>
+
+    <p id="opis-algoritma" style="margin-bottom:.5rem"></p>
+    <div class="poruka upozorenje" id="napomena-algoritma"></div>
+</div>
+
+<!-- ===================== Simetrični i ChaCha20 ===================== -->
+<section id="sekcija-simetricni" class="skriven">
+    <h2>1. Ključ</h2>
+    <div class="panel">
+        <div class="red-dugmadi">
+            <button id="dugme-kljuc">Generiši ključ</button>
+            <span class="prigusen" id="status-kljuca">Ključ još nije generisan.</span>
+        </div>
+        <div id="prikaz-kljuca" style="margin-top:.9rem"></div>
+    </div>
+
+    <h2>2. Otvoreni tekst</h2>
+    <div class="panel">
+        <label for="unos-teksta">Tekst proizvoljne dužine</label>
+        <textarea id="unos-teksta">Ovo je tajna poruka koju šifrujemo ručno implementiranim algoritmom.</textarea>
+        <div class="prigusen" id="info-dopune" style="margin-top:.5rem"></div>
+    </div>
+
+    <h2>3. Enkripcija i dekripcija</h2>
+    <div class="panel">
+        <div class="red-dugmadi">
+            <button id="dugme-sifruj" disabled>Enkriptuj i dekriptuj</button>
+            <label style="display:flex;gap:.4rem;align-items:center;margin:0">
+                <input type="radio" name="format" value="hex" checked> hex
+            </label>
+            <label style="display:flex;gap:.4rem;align-items:center;margin:0">
+                <input type="radio" name="format" value="base64"> base64
+            </label>
+        </div>
+        <div id="rezultat-simetricni"></div>
+    </div>
+</section>
+
+<!-- ============================== RSA ============================== -->
+<section id="sekcija-rsa" class="skriven">
+    <h2>1. Par ključeva</h2>
+    <div class="panel">
+        <div class="red-dugmadi">
+            <button id="dugme-rsa-kljuc">Generiši par ključeva</button>
+            <span class="prigusen" id="status-rsa">Kod 4096 bita traje nekoliko sekundi.</span>
+        </div>
+        <div id="prikaz-rsa-kljuca" style="margin-top:.9rem"></div>
+    </div>
+
+    <h2>2. Poruka</h2>
+    <div class="panel">
+        <label for="unos-rsa">Poruka</label>
+        <textarea id="unos-rsa" style="min-height:4.5rem">Tajna poruka.</textarea>
+        <div class="prigusen" id="info-rsa-limit" style="margin-top:.5rem"></div>
+    </div>
+
+    <h2>3. Enkripcija javnim, dekripcija privatnim</h2>
+    <div class="panel">
+        <button id="dugme-rsa-sifruj" disabled>Enkriptuj i dekriptuj</button>
+        <div id="rezultat-rsa"></div>
+    </div>
+</section>
+
+<!-- ============================= ECDH ============================== -->
+<section id="sekcija-ecdh" class="skriven">
+    <h2>1. Obje strane generišu par ključeva</h2>
+    <div class="panel">
+        <button id="dugme-ecdh">Pokreni razmjenu</button>
+        <div id="rezultat-ecdh" style="margin-top:.9rem"></div>
+    </div>
+
+    <h2>2. Hibridna primjena (3.5.3)</h2>
+    <div class="panel">
+        <p style="margin-top:0" class="prigusen">
+            Sama tajna se nikad ne koristi direktno kao ključ — propušta se kroz hash
+            funkciju. Iz nje se izvodi AES-128 ključ kojim se šifruje tekst, što je
+            tačno ono što radi TLS: (EC)DHE uspostavi tajnu, AES štiti saobraćaj.
+        </p>
+        <label for="unos-ecdh">Tekst koji Alice šalje Bobu</label>
+        <textarea id="unos-ecdh" style="min-height:4.5rem">Poruka zaštićena ključem izvedenim iz ECDH tajne.</textarea>
+        <div class="red-dugmadi" style="margin-top:.7rem">
+            <button id="dugme-ecdh-sifruj" disabled>Izvedi AES ključ i šifruj</button>
+        </div>
+        <div id="rezultat-hibridni"></div>
+    </div>
+</section>
+{% endblock %}
+
+{% block skripte %}
+<script>
+    window.ALGORITMI = {{ algoritmi_json | safe }};
+</script>
+<script src="{{ url_for('static', filename='js/core.js') }}"></script>
+{% endblock %}

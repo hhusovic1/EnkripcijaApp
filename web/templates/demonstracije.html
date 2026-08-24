@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block naslov %}Sigurnosne demonstracije · Enkripcijski algoritmi{% endblock %}
+
+{% block sadrzaj %}
+<h1>Sigurnosne demonstracije</h1>
+<p class="podnaslov">
+    Oba napada se izvršavaju stvarno, u trenutku kad klikneš — ništa nije
+    unaprijed pripremljeno ni simulirano tekstom.
+</p>
+
+<div class="tabovi">
+    <button class="aktivan" data-tab="tab-mitm">MITM na Diffie-Hellman (3.4.4)</button>
+    <button data-tab="tab-wiener">Wienerov napad na RSA (3.3.6)</button>
+</div>
+
+<!-- ============================== MITM ============================== -->
+<div id="tab-mitm" class="tab-sadrzaj aktivan">
+    <p>
+        Diffie-Hellman omogućava dvjema stranama da preko potpuno nesigurnog kanala
+        dođu do zajedničke tajne. Ono što <strong>ne</strong> radi jeste provjera
+        s kim se zapravo razgovara — i upravo to napad iskorištava.
+    </p>
+
+    <div class="panel">
+        <div class="mreza mreza-3">
+            <div>
+                <label for="izbor-grupe">Parametri grupe</label>
+                <select id="izbor-grupe">
+                    {% for g in grupe %}
+                    <option value="{{ g.id }}">{{ g.naziv }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="izbor-scenarija">Scenario</label>
+                <select id="izbor-scenarija">
+                    <option value="bez_mallory">Bez Mallory — uredna razmjena</option>
+                    <option value="sa_mallory">Sa Mallory — napad posrednika</option>
+                </select>
+            </div>
+            <div>
+                <label for="unos-poruke">Poruka koju Alice šalje</label>
+                <input type="text" id="unos-poruke" value="{{ podrazumijevana_poruka }}">
+            </div>
+        </div>
+        <p class="prigusen" id="opis-grupe" style="margin:.7rem 0 0"></p>
+    </div>
+
+    <div class="panel">
+        <div class="red-dugmadi">
+            <button id="dugme-mitm">Pokreni razmjenu</button>
+            <button class="sekundarno skriven" id="dugme-mitm-dalje">Sljedeći korak ▸</button>
+            <button class="sekundarno skriven" id="dugme-mitm-sve">Prikaži sve</button>
+            <span class="prigusen" id="status-mitm"></span>
+        </div>
+        <div class="traka-napretka skriven" id="traka-mitm"><div style="width:0"></div></div>
+        <div id="koraci-mitm"></div>
+        <div id="zakljucak-mitm"></div>
+    </div>
+
+    <details class="panel">
+        <summary style="cursor:pointer;font-weight:600">
+            Kako izgleda ista razmjena bez i sa napadačem
+        </summary>
+        <div class="tabela-omot" style="margin-top:.9rem">
+            <table>
+                <thead>
+                    <tr><th></th><th>Bez Mallory</th><th>Sa Mallory</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Broj razmjena</td><td>jedna</td><td><strong>dvije odvojene</strong></td></tr>
+                    <tr><td>Alicina tajna</td><td><code>g^ab mod p</code></td><td><code>g^(a·m₁) mod p</code></td></tr>
+                    <tr><td>Bobova tajna</td><td><code>g^ab</code> — <strong>ista</strong></td><td><code>g^(b·m₂)</code> — <strong>različita</strong></td></tr>
+                    <tr><td>Ko zna ključ</td><td>Alice, Bob</td><td>Alice+Mallory, Bob+Mallory</td></tr>
+                    <tr><td>Šta vidi napadač</td><td><code>p, g, A, B</code> — beskorisno</td><td><strong>sve, u čitljivom obliku</strong></td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p class="prigusen" style="margin-bottom:0">
+            Alice i Bob bi napad otkrili kad bi uporedili svoje tajne — ali osnovni
+            protokol taj korak nema, a i da ga ima, poređenje bi išlo preko istog
+            kanala koji Mallory kontroliše.
+        </p>
+    </details>
+</div>
+
+<!-- ============================= WIENER ============================= -->
+<div id="tab-wiener" class="tab-sadrzaj">
+    <p>
+        RSA se oslanja na to da je faktorizacija velikog <code>n</code> neizvodljiva.
+        Wienerov napad <strong>ne faktoriše <code>n</code></strong> — pokazuje da je
+        dovoljno da vlasnik ključa izabere premali privatni eksponent <code>d</code>
+        i cijeli ključ pada, bez diranja problema na kojem RSA počiva.
+    </p>
+
+    <div class="panel">
+        <div class="red-dugmadi">
+            <div>
+                <label for="izbor-bita">Dužina ključa</label>
+                <select id="izbor-bita" style="width:auto">
+                    <option value="1024" selected>1024 bita</option>
+                    <option value="2048">2048 bita</option>
+                </select>
+            </div>
+            <button id="dugme-wiener" style="align-self:end">Pokreni napad</button>
+            <span class="prigusen" id="status-wiener" style="align-self:end"></span>
+        </div>
+    </div>
+
+    <div id="rezultat-wiener"></div>
+</div>
+{% endblock %}
+
+{% block skripte %}
+<script>
+    window.GRUPE = {{ grupe_json | safe }};
+</script>
+<script src="{{ url_for('static', filename='js/demonstracije.js') }}"></script>
+{% endblock %}

@@ -403,7 +403,10 @@ def sa_mallory(grupa=DEMO, poruka=PORUKA) -> dict:
             "Primijetio iko nesto?": "ne"},
            istaknuto=True)
 
-    izmijenjeno = poruka.replace("BA39 1290 0000 0012 3456", "BA39 6666 9999 0000 1111")
+    # Mallory salje svoj sadrzaj, a ne izmjenu Alicinog - tako se vidi da nije
+    # rijec o kvarenju sifrata nego o punoj kontroli nad porukom, i demonstracija
+    # radi bez obzira sta je korisnik unio kao originalnu poruku.
+    izmijenjeno = "Bobe, zanemari prethodnu poruku. Novi broj racuna je BA39 6666 9999 0000 1111."
     blob_izmijenjen = mallory.proslijedi(izmijenjeno, prema="Bob")
     bob_primio_izmijenjeno = bob.desifruj(blob_izmijenjen)
 

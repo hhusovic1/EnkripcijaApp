@@ -1,0 +1,19 @@
+{
+  "name": "enkripcijski-algoritmi-web",
+  "version": "1.0.0",
+  "private": true,
+  "description": "TypeScript frontend za demonstracionu aplikaciju (backend je Python/Flask)",
+  "scripts": {
+    "build": "esbuild web/ts/core.ts web/ts/benchmark.ts web/ts/demonstracije.ts --bundle --minify --target=es2020 --outdir=web/static/js",
+    "build:dev": "npm run build -- --sourcemap",
+    "watch": "npm run build:dev -- --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "typescript": "^5.7.0"
+  },
+  "dependencies": {
+    "chart.js": "^4.4.7"
+  }
+}

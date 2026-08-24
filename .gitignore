@@ -12,6 +12,10 @@ venv/
 .vscode/
 .claude/
 
+# Node - potreban samo za izmjenu frontenda; kompajlirani JS SE commita
+node_modules/
+web/static/js/*.map
+
 # OS
 Thumbs.db
 .DS_Store
