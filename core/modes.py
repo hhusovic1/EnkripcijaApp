@@ -60,12 +60,21 @@ def _xor(a: bytes, b: bytes) -> bytes:
     return bytes(x ^ y for x, y in zip(a, b))
 
 
-def cbc_encrypt(plaintext: bytes, encrypt_block, block_size: int, iv: bytes = None) -> tuple:
+PROGRESS_SVAKIH_BLOKOVA = 512
+
+
+def cbc_encrypt(plaintext: bytes, encrypt_block, block_size: int, iv: bytes = None,
+                on_progress=None) -> tuple:
     """
     Enkriptuje poruku proizvoljne duzine u CBC rezimu.
 
     `encrypt_block` je funkcija jednog bloka - npr. lambda b: aes.encrypt(b, key).
     Vraca (iv, ciphertext); IV se generise nasumicno ako nije zadat.
+
+    `on_progress(obradjeno_bajtova, ukupno_bajtova)` se, ako je zadat, poziva
+    povremeno tokom obrade - koristi ga aplikacija za prikaz napretka kod
+    velikih ulaza. Poziva se svakih PROGRESS_SVAKIH_BLOKOVA blokova, dakle
+    dovoljno rijetko da ne utice na izmjereno vrijeme.
     """
     if iv is None:
         iv = os.urandom(block_size)
@@ -78,17 +87,28 @@ def cbc_encrypt(plaintext: bytes, encrypt_block, block_size: int, iv: bytes = No
 
     ciphertext = bytearray()
     previous = iv
-    for offset in range(0, len(padded), block_size):
+    for redni_broj, offset in enumerate(range(0, len(padded), block_size)):
         block = padded[offset: offset + block_size]
         encrypted = encrypt_block(_xor(block, previous))
         ciphertext += encrypted
         previous = encrypted
 
+        if on_progress is not None and redni_broj % PROGRESS_SVAKIH_BLOKOVA == 0:
+            on_progress(offset, len(padded))
+
+    if on_progress is not None:
+        on_progress(len(padded), len(padded))
+
     return iv, bytes(ciphertext)
 
 
-def cbc_decrypt(ciphertext: bytes, decrypt_block, block_size: int, iv: bytes) -> bytes:
-    """Inverz od cbc_encrypt. `decrypt_block` dekriptuje jedan blok."""
+def cbc_decrypt(ciphertext: bytes, decrypt_block, block_size: int, iv: bytes,
+                on_progress=None) -> bytes:
+    """
+    Inverz od cbc_encrypt. `decrypt_block` dekriptuje jedan blok.
+
+    `on_progress` radi isto kao kod cbc_encrypt - vidi tamo.
+    """
     if len(iv) != block_size:
         raise ValueError(
             "IV mora imati tacno %d bajta, dobijeno %d" % (block_size, len(iv))
@@ -101,9 +121,15 @@ def cbc_decrypt(ciphertext: bytes, decrypt_block, block_size: int, iv: bytes) ->
 
     plaintext = bytearray()
     previous = iv
-    for offset in range(0, len(ciphertext), block_size):
+    for redni_broj, offset in enumerate(range(0, len(ciphertext), block_size)):
         block = ciphertext[offset: offset + block_size]
         plaintext += _xor(decrypt_block(block), previous)
         previous = block
+
+        if on_progress is not None and redni_broj % PROGRESS_SVAKIH_BLOKOVA == 0:
+            on_progress(offset, len(ciphertext))
+
+    if on_progress is not None:
+        on_progress(len(ciphertext), len(ciphertext))
 
     return pkcs7_unpad(bytes(plaintext), block_size)

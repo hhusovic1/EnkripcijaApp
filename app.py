@@ -45,7 +45,7 @@ with kolone[1]:
     st.caption("DES/3DES, AES, RSA — od nule, bez biblioteka")
 
 with kolone[2]:
-    st.metric("Testova validacije", "51")
+    st.metric("Testova validacije", "69")
     st.caption("Zvanični test vektori + poređenje s referentnom bibliotekom")
 
 st.divider()
@@ -54,6 +54,7 @@ st.subheader("Sadržaj")
 
 if os.path.exists(BENCHMARK_CSV):
     st.page_link("pages/1_Benchmark.py", label="**Benchmark** — izmjerene performanse svih algoritama", icon="📊")
+    st.page_link("pages/2_Mjeri_svoj_fajl.py", label="**Mjeri svoj fajl** — učitaj fajl i izmjeri algoritme na njemu", icon="📁")
 else:
     st.warning(
         "Benchmark rezultati još nisu generisani. Pokreni:\n\n"
@@ -61,8 +62,11 @@ else:
     )
 
 st.info(
+    "**Gotovo, ali još bez stranice:** MITM napad na Diffie-Hellman i Wienerov napad "
+    "na RSA rade i pokriveni su testovima — za sada se pokreću iz terminala:\n\n"
+    "```\npython attacks/mitm_dh.py\n```\n\n"
     "**U izradi:** stranica *Core algoritmi* (interaktivna enkripcija/dekripcija) "
-    "i *Sigurnosne demonstracije* (MITM napad na Diffie-Hellman, Wienerov napad na RSA).",
+    "i *Sigurnosne demonstracije*.",
     icon="🚧",
 )
 

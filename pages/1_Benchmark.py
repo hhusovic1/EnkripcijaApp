@@ -133,7 +133,55 @@ with tab_velicina:
     if ima_velicine.empty:
         st.info("Odabrani algoritmi nemaju mjerenja po veličini podataka.")
     else:
-        st.pyplot(plot_results.graf_vrijeme_vs_velicina(filtrirano))
+        st.image(plot_results.u_sliku(plot_results.graf_vrijeme_vs_velicina(filtrirano)))
+
+    with st.expander("Zašto RSA ima samo jednu tačku, a ostali imaju liniju?"):
+        st.markdown(
+            """
+DES, AES i ChaCha20 obrađuju **ulaz proizvoljne dužine** — dijele ga na blokove i
+vrte petlju. Daš im 64 bajta ili 64 kilobajta, oni rade isto, samo duže. Zato se
+mogu izmjeriti na više veličina i dobiješ liniju.
+
+RSA nije petlja. To je **jedna matematička operacija** nad jednim brojem:
+`c = m^e mod n`. Poruka `m` mora biti manja od modula `n`, inače je rezultat
+besmislen. Dužina ključa time direktno određuje jedinu moguću veličinu ulaza:
+
+| Ključ | Najveća poruka |
+|---|---|
+| RSA-1024 | 126 B |
+| RSA-2048 | 254 B |
+| RSA-3072 | 382 B |
+| RSA-4096 | 510 B |
+
+Dakle nema šta da se mjeri na više veličina — jedna dužina ključa, jedno mjerenje,
+jedna tačka. Položaj romba na horizontalnoj osi **nije izbor**, nego posljedica
+dužine ključa.
+
+#### Gdje graf vara
+
+Rombovi za enkripciju leže nisko, što izgleda kao da je RSA brz. Nije — obradio je
+126–510 bajtova, dok su ostali obradili do 64 KB. Kad se preračuna **po bajtu**,
+slika se okreće:
+
+| Operacija | Propusnost |
+|---|---|
+| RSA-2048 dekripcija | 13.7 KB/s |
+| RSA-4096 dekripcija | **3.8 KB/s** |
+| AES-128 dekripcija (ručna) | 24.3 KB/s |
+
+RSA-4096 dekriptuje **6× sporije po bajtu** nego ručno pisani AES u čistom Pythonu —
+a RSA pritom koristi ugrađeni `pow()` koji je optimizovani C kod, dok je AES ovdje
+petlja u Pythonu. Stvarna algoritamska razlika je još mnogo veća.
+
+Nesrazmjera enkripcija/dekripcija (RSA-4096: 0.5 ms naspram 133 ms) dolazi od toga
+što je `e = 65537` broj sa samo dva postavljena bita, dok je `d` pune dužine
+modula — tačno razlog zbog kojeg se `e = 65537` i bira (3.3.3).
+
+**Zaključak koji iz ovoga slijedi:** RSA se u praksi nikad ne koristi za enkripciju
+samih podataka, nego samo za zaštitu simetričnog ključa. To je hibridni
+kriptosistem iz **3.5.3** — možeš ga isprobati na stranici *Mjeri svoj fajl*.
+"""
+        )
 
 with tab_kljuc:
     st.markdown(
@@ -145,7 +193,7 @@ with tab_kljuc:
     if ima_keygen.empty:
         st.info("Odabrani algoritmi nemaju mjerenja generisanja ključa.")
     else:
-        st.pyplot(plot_results.graf_generisanje_kljuca(filtrirano))
+        st.image(plot_results.u_sliku(plot_results.graf_generisanje_kljuca(filtrirano)))
 
 with tab_poredjenje:
     dostupne_velicine = sorted(
@@ -162,7 +210,7 @@ with tab_poredjenje:
         value=podrazumijevana,
         format_func=formatiraj_velicinu,
     )
-    st.pyplot(plot_results.graf_poredjenje(filtrirano, velicina))
+    st.image(plot_results.u_sliku(plot_results.graf_poredjenje(filtrirano, velicina)))
 
 # ---------------------------------------------------------------------------
 # Tabela sirovih brojeva

@@ -13,7 +13,9 @@ sys.path.insert(0, HERE)
 
 import test_aes  # noqa: E402
 import test_des  # noqa: E402
+import test_mitm  # noqa: E402
 import test_modes  # noqa: E402
+import test_plot  # noqa: E402
 import test_rsa  # noqa: E402
 
 MODULI = [
@@ -21,6 +23,8 @@ MODULI = [
     ("AES", test_aes),
     ("RSA", test_rsa),
     ("Padding / CBC / ECC / ChaCha20", test_modes),
+    ("MITM na Diffie-Hellman", test_mitm),
+    ("Grafovi", test_plot),
 ]
 
 

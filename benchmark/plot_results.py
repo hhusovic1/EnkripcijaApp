@@ -8,14 +8,24 @@ Ove slike idu direktno u poglavlje 3.5 rada. Streamlit aplikacija ne koristi
 ove PNG-ove nego crta interaktivne verzije istih grafova iz istog CSV-a, pa su
 brojevi u radu i u aplikaciji garantovano isti.
 """
+import functools
+import io
 import os
 import sys
+import threading
 
 import matplotlib
 
 matplotlib.use("Agg")  # bez GUI-ja - skripta se pokrece iz terminala
 import matplotlib.pyplot as plt  # noqa: E402
+import matplotlib.ticker as mticker  # noqa: E402
 import pandas as pd  # noqa: E402
+
+# Matplotlib nije thread-safe, a Streamlit svaki rerun izvrsava u zasebnoj niti.
+# Kad se dvije stranice crtaju istovremeno, dijeljeno stanje mathtext parsera se
+# pokvari i javi se "ParseException: Expected end of text, found '$'" pri
+# renderovanju oznaka log-skale. Zato je crtanje serijalizovano.
+_LOCK = threading.RLock()
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 RESULTS_PATH = os.path.join(HERE, "results.csv")
@@ -63,9 +73,77 @@ def _stil_ose(ax, xlabel, ylabel, naslov):
 
 
 # ---------------------------------------------------------------------------
+# Oznake na logaritamskim osama
+#
+# Podrazumijevani formatter za log-skalu ispisuje 10^n kroz mathtext ($...$).
+# Osim sto je to izvor gornjeg problema s nitima, "10^4 B" je i teze citljivo
+# od "10 KB". Zato se koriste obicne tekstualne oznake.
+# ---------------------------------------------------------------------------
+
+def formatiraj_bajtove(vrijednost, _pozicija=None) -> str:
+    if vrijednost <= 0:
+        return ""
+    if vrijednost >= 1e6:
+        return "%g MB" % (vrijednost / 1e6)
+    if vrijednost >= 1e3:
+        return "%g KB" % (vrijednost / 1e3)
+    return "%g B" % vrijednost
+
+
+def formatiraj_sekunde(vrijednost, _pozicija=None) -> str:
+    if vrijednost <= 0:
+        return ""
+    if vrijednost >= 1:
+        return "%g s" % vrijednost
+    if vrijednost >= 1e-3:
+        return "%g ms" % (vrijednost * 1e3)
+    return "%g µs" % (vrijednost * 1e6)
+
+
+def oznaci_log_osu(ax, os: str, vrsta: str):
+    """`os` je 'x' ili 'y'; `vrsta` je 'bajtovi' ili 'vrijeme'."""
+    formatter = formatiraj_bajtove if vrsta == "bajtovi" else formatiraj_sekunde
+    axis = ax.xaxis if os == "x" else ax.yaxis
+    axis.set_major_formatter(mticker.FuncFormatter(formatter))
+    # Bez oznaka na sporednim podiocima - inace se na log skali gomilaju
+    axis.set_minor_formatter(mticker.NullFormatter())
+
+
+def serijalizovano(func):
+    """
+    Osigurava da se u datom trenutku crta samo jedna figura.
+
+    Bez ovoga dvije Streamlit niti mogu istovremeno uci u matplotlib i pokvariti
+    dijeljeno stanje parsera - vidi komentar uz _LOCK.
+    """
+
+    @functools.wraps(func)
+    def omotac(*args, **kwargs):
+        with _LOCK:
+            return func(*args, **kwargs)
+
+    return omotac
+
+
+def u_sliku(fig, dpi: int = 150) -> bytes:
+    """
+    Renderuje figuru u PNG bajtove i zatvara je.
+
+    Aplikacija koristi ovo umjesto st.pyplot() da renderovanje ostane unutar
+    istog zakljucavanja kao i crtanje - vidi komentar uz _LOCK.
+    """
+    with _LOCK:
+        bafer = io.BytesIO()
+        fig.savefig(bafer, format="png", dpi=dpi, bbox_inches="tight")
+        plt.close(fig)
+    return bafer.getvalue()
+
+
+# ---------------------------------------------------------------------------
 # Graf 1: vrijeme vs velicina podataka
 # ---------------------------------------------------------------------------
 
+@serijalizovano
 def graf_vrijeme_vs_velicina(df: pd.DataFrame):
     """
     Log-log skala jer se raspon proteze preko vise redova velicine: rucni DES
@@ -73,25 +151,49 @@ def graf_vrijeme_vs_velicina(df: pd.DataFrame):
     """
     fig, axes = plt.subplots(1, 2, figsize=(13, 5.5), sharey=True)
 
+    # Opseg velicina koje RSA uopste moze obraditi - koristi se za sjencanje.
+    # RSA nema izbor velicine ulaza: poruka mora biti manja od modula, pa svaka
+    # duzina kljuca ima tacno jednu mogucu velicinu bloka.
+    rsa_velicine = df[
+        df["algoritam"].str.startswith("RSA") & df["velicina_bajta"].notna()
+    ]["velicina_bajta"]
+
     for ax, operacija in zip(axes, ("enkripcija", "dekripcija")):
         podaci = df[(df["operacija"] == operacija) & df["velicina_bajta"].notna()]
+
+        if not rsa_velicine.empty:
+            ax.axvspan(rsa_velicine.min(), rsa_velicine.max(),
+                       color="#6a4c93", alpha=0.07, zorder=0)
+            # Diskretna oznaka uz vrh trake umjesto velike kutije s objasnjenjem -
+            # puni tekst stoji u potpisu ispod figure.
+            ax.text(
+                (rsa_velicine.min() * rsa_velicine.max()) ** 0.5, 0.985,
+                "RSA: %d-%d B" % (rsa_velicine.min(), rsa_velicine.max()),
+                transform=ax.get_xaxis_transform(), ha="center", va="top",
+                fontsize=7.5, color="#6a4c93", zorder=5,
+            )
 
         for algoritam in sorted(podaci["algoritam"].unique()):
             serija = podaci[podaci["algoritam"] == algoritam].sort_values("velicina_bajta")
             if serija.empty:
                 continue
 
-            # RSA ima samo jednu tacku (jedan blok), pa se crta kao marker
-            stil = "o-" if len(serija) > 1 else "D"
+            # RSA ima samo jednu tacku (jedan blok), pa se crta kao romb bez linije
+            jedna_tacka = len(serija) == 1
             ax.errorbar(
                 serija["velicina_bajta"], serija["srednje_vrijeme_s"],
-                yerr=serija["std_dev_s"], fmt=stil, capsize=3, markersize=5,
+                yerr=serija["std_dev_s"], fmt="D" if jedna_tacka else "o-",
+                capsize=3, markersize=7 if jedna_tacka else 5,
                 linewidth=1.6, label=algoritam, color=boja(algoritam),
+                markeredgecolor="white" if jedna_tacka else "none",
+                markeredgewidth=0.8, zorder=3 if jedna_tacka else 2,
             )
 
         ax.set_xscale("log")
         ax.set_yscale("log")
-        _stil_ose(ax, "Velicina podataka (bajtova)", "Vrijeme (s)", operacija.capitalize())
+        oznaci_log_osu(ax, "x", "bajtovi")
+        oznaci_log_osu(ax, "y", "vrijeme")
+        _stil_ose(ax, "Velicina podataka", "Vrijeme", operacija.capitalize())
 
     axes[1].legend(bbox_to_anchor=(1.02, 1), loc="upper left", fontsize=8, frameon=False)
     fig.suptitle(
@@ -100,8 +202,9 @@ def graf_vrijeme_vs_velicina(df: pd.DataFrame):
     )
     fig.text(
         0.5, 0.005,
-        "DES/3DES/AES su rucne Python implementacije; ChaCha20 i '(biblioteka)' "
-        "idu kroz optimizovani C kod. RSA je jedan blok, pa ima jednu tacku.",
+        "Linija = ulaz proizvoljne duzine, obradjen blok po blok.   "
+        "Romb = jedina moguca velicina ulaza, odredjena duzinom kljuca (osjenceno).   "
+        "Niska tacka ne znaci brz algoritam: RSA obradi 126-510 B, ostali do 10 MB.",
         ha="center", fontsize=8, style="italic",
     )
     fig.tight_layout(rect=[0, 0.03, 1, 0.96])
@@ -112,6 +215,7 @@ def graf_vrijeme_vs_velicina(df: pd.DataFrame):
 # Graf 2: generisanje kljuca vs duzina kljuca
 # ---------------------------------------------------------------------------
 
+@serijalizovano
 def graf_generisanje_kljuca(df: pd.DataFrame):
     """
     RSA je ovdje jedini zanimljiv slucaj: generisanje kljuca znaci trazenje dva
@@ -133,7 +237,8 @@ def graf_generisanje_kljuca(df: pd.DataFrame):
         )
         ax_rsa.set_xticks(rsa_podaci["duzina_kljuca_bita"])
         ax_rsa.set_yscale("log")
-        _stil_ose(ax_rsa, "Duzina kljuca (bita)", "Vrijeme (s)",
+        oznaci_log_osu(ax_rsa, "y", "vrijeme")
+        _stil_ose(ax_rsa, "Duzina kljuca (bita)", "Vrijeme",
                   "RSA - generisanje para kljuceva")
         ax_rsa.text(
             0.03, 0.95,
@@ -167,7 +272,8 @@ def graf_generisanje_kljuca(df: pd.DataFrame):
         ax_ostali.set_yticks(pozicije)
         ax_ostali.set_yticklabels(ostali["algoritam"])
         ax_ostali.set_xscale("log")
-        _stil_ose(ax_ostali, "Vrijeme (s)", "",
+        oznaci_log_osu(ax_ostali, "x", "vrijeme")
+        _stil_ose(ax_ostali, "Vrijeme", "",
                   "Ostali algoritmi - generisanje kljuca")
         ax_ostali.text(
             0.97, 0.05,
@@ -188,6 +294,7 @@ def graf_generisanje_kljuca(df: pd.DataFrame):
 # Graf 3: direktno poredjenje pri fiksnoj velicini
 # ---------------------------------------------------------------------------
 
+@serijalizovano
 def graf_poredjenje(df: pd.DataFrame, velicina=POREDBENA_VELICINA):
     """
     Bar chart pri fiksnoj velicini podataka. RSA ne moze enkriptovati 4 KB
@@ -233,7 +340,8 @@ def graf_poredjenje(df: pd.DataFrame, velicina=POREDBENA_VELICINA):
     ax.set_xticks(list(pozicije))
     ax.set_xticklabels(oznake, rotation=45, ha="right", fontsize=9)
     ax.set_yscale("log")
-    _stil_ose(ax, "", "Vrijeme enkripcije (s, log skala)",
+    oznaci_log_osu(ax, "y", "vrijeme")
+    _stil_ose(ax, "", "Vrijeme enkripcije (log skala)",
               "Poredjenje algoritama pri velicini podataka od %d B" % velicina)
 
     for pozicija, vrijeme in zip(pozicije, poredjenje["srednje_vrijeme_s"]):
@@ -258,6 +366,7 @@ def _formatiraj_vrijeme(sekunde: float) -> str:
     return "%.1f us" % (sekunde * 1e6)
 
 
+@serijalizovano
 def snimi(fig, ime: str) -> str:
     os.makedirs(FIGURES_DIR, exist_ok=True)
     putanja = os.path.join(FIGURES_DIR, ime)
