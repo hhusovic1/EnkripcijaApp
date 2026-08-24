@@ -30,8 +30,11 @@ def _random_prime(bits: int) -> int:
     Donja granica je 2^(bits-1) * sqrt(2), cime se garantuje da proizvod dva
     ovakva prosta broja ima tacno 2*bits bita - inace modul zna ispasti kraci
     od trazenog, pa "RSA-2048" u stvari bude 2047-bitni.
+
+    Granica se racuna cjelobrojno: sqrt(2) * 2^(bits-1) = sqrt(2 * 2^(2*bits-2)).
+    Mnozenje s float konstantom bi za bits >= 1024 preslo opseg tipa float.
     """
-    low = int((1 << (bits - 1)) * 1.4142135623730951)
+    low = math.isqrt(2 << (2 * bits - 2))
     high = (1 << bits) - 1
     return randprime(low, high)
 

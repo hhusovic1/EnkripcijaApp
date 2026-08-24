@@ -112,6 +112,48 @@ def test_cbc_isti_blokovi_daju_razlicit_sifrat():
     assert aes.encrypt(b"A" * 16, key) == aes.encrypt(b"A" * 16, key)
 
 
+def test_cbc_progress_callback():
+    """
+    Callback za napredak mora se pozvati, zavrsiti na 100% i ne smije mijenjati
+    rezultat - koristi ga aplikacija za progress bar kod velikih fajlova.
+    """
+    key = aes.generate_keys(128)["key"]
+    plaintext = os.urandom(50_000)
+
+    pozivi = []
+    iv, ciphertext = modes.cbc_encrypt(
+        plaintext, lambda b: aes.encrypt(b, key), 16,
+        on_progress=lambda obradjeno, ukupno: pozivi.append((obradjeno, ukupno)),
+    )
+
+    assert pozivi, "callback nije pozvan nijednom"
+    assert pozivi[-1][0] == pozivi[-1][1], "posljednji poziv nije 100%"
+    assert all(o <= u for o, u in pozivi), "napredak je premasio ukupno"
+
+    # Rezultat mora biti identican onome bez callbacka
+    _, bez_callbacka = modes.cbc_encrypt(
+        plaintext, lambda b: aes.encrypt(b, key), 16, iv=iv
+    )
+    assert ciphertext == bez_callbacka
+
+    pozivi_dec = []
+    vraceno = modes.cbc_decrypt(
+        ciphertext, lambda b: aes.decrypt(b, key), 16, iv,
+        on_progress=lambda obradjeno, ukupno: pozivi_dec.append((obradjeno, ukupno)),
+    )
+    assert vraceno == plaintext
+    assert pozivi_dec and pozivi_dec[-1][0] == pozivi_dec[-1][1]
+
+
+def test_cbc_docstring_nije_pokvaren():
+    """
+    Regresija: docstring je bio napisan kao string s % operatorom, sto ga je
+    pretvorilo u obican izraz i ostavilo __doc__ prazan.
+    """
+    assert modes.cbc_encrypt.__doc__, "cbc_encrypt nema docstring"
+    assert "on_progress" in modes.cbc_encrypt.__doc__
+
+
 def test_cbc_razliciti_iv_daje_razlicit_sifrat():
     key = aes.generate_keys(128)["key"]
     plaintext = b"ista poruka svaki put"

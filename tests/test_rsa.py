@@ -153,6 +153,36 @@ def test_generisanje_2048():
     assert rsa.decrypt_bytes(ciphertext, keys["private"]) == b"test"
 
 
+def test_granica_prostih_brojeva_za_sve_duzine():
+    """
+    Regresija: donja granica se ranije racunala mnozenjem s float konstantom,
+    sto je za kljuceve od 3072 bita naviše prelazilo opseg tipa float
+    (OverflowError). Provjerava se cjelobrojni racun za sve podrzane duzine.
+    """
+    for bits in rsa.VALID_KEY_SIZES:
+        half = bits // 2
+        prost = rsa._random_prime(half)
+        assert prost.bit_length() == half, (
+            "prost broj za %d-bitni kljuc ima %d bita umjesto %d"
+            % (bits, prost.bit_length(), half)
+        )
+        assert isprime(prost)
+
+        # Dva ovakva prosta broja moraju dati modul tacne duzine
+        assert (prost * rsa._random_prime(half)).bit_length() == bits
+
+
+def test_generisanje_svih_duzina_kljuca():
+    """Sve duzine iz benchmarka moraju proci cijeli ciklus, ne samo keygen."""
+    for bits in rsa.VALID_KEY_SIZES:
+        keys = rsa.generate_keys(bits)
+        assert keys["public"][0].bit_length() == bits
+        poruka = b"provjera %d" % bits
+        assert rsa.decrypt_bytes(
+            rsa.encrypt_bytes(poruka, keys["public"]), keys["private"]
+        ) == poruka
+
+
 def _run_all():
     tests = [value for name, value in sorted(globals().items()) if name.startswith("test_")]
     failed = 0
