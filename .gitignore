@@ -14,6 +14,7 @@ venv/
 # OS
 Thumbs.db
 .DS_Store
+.claude
 
 # NAPOMENA: benchmark/results.csv i benchmark/figures/ se NAMJERNO commitaju -
 # mjerenje se ne pokrece na serveru, pa bez njih Benchmark stranica ostaje prazna.
