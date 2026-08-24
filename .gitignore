@@ -7,14 +7,14 @@ __pycache__/
 .venv/
 venv/
 
-# IDE
+# Alati i IDE - lokalna konfiguracija, ne ide u repo
 .idea/
 .vscode/
+.claude/
 
 # OS
 Thumbs.db
 .DS_Store
-.claude
 
 # NAPOMENA: benchmark/results.csv i benchmark/figures/ se NAMJERNO commitaju -
 # mjerenje se ne pokrece na serveru, pa bez njih Benchmark stranica ostaje prazna.
