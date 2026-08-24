@@ -1,0 +1,11 @@
+[theme]
+base = "dark"
+primaryColor = "#4aa3d0"
+
+[server]
+# Ogranicenje uploada na stranici "Mjeri svoj fajl". Rucne implementacije ionako
+# obradjuju najvise 1 MB, pa nema razloga primati velike fajlove.
+maxUploadSize = 64
+
+[browser]
+gatherUsageStats = false

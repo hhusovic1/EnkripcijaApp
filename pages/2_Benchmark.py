@@ -18,6 +18,7 @@ KORIJEN = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, KORIJEN)
 sys.path.insert(0, os.path.join(KORIJEN, "benchmark"))
 
+import app_ui  # noqa: E402
 import plot_results  # noqa: E402
 
 st.set_page_config(page_title="Benchmark - Enkripcijski algoritmi",
@@ -50,6 +51,8 @@ def formatiraj_velicinu(bajtova) -> str:
 
 
 # ---------------------------------------------------------------------------
+
+app_ui.zaglavlje("pages/2_Benchmark.py")
 
 st.title("📊 Benchmark")
 

@@ -16,6 +16,8 @@ import test_des  # noqa: E402
 import test_mitm  # noqa: E402
 import test_modes  # noqa: E402
 import test_plot  # noqa: E402
+import test_stranice  # noqa: E402
+import test_wiener  # noqa: E402
 import test_rsa  # noqa: E402
 
 MODULI = [
@@ -24,7 +26,9 @@ MODULI = [
     ("RSA", test_rsa),
     ("Padding / CBC / ECC / ChaCha20", test_modes),
     ("MITM na Diffie-Hellman", test_mitm),
+    ("Wienerov napad na RSA", test_wiener),
     ("Grafovi", test_plot),
+    ("Streamlit stranice", test_stranice),
 ]
 
 

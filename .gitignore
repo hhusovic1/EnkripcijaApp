@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Virtualno okruzenje
+.venv/
+venv/
+
+# Alati i IDE - lokalna konfiguracija, ne ide u repo
+.idea/
+.vscode/
+.claude/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# NAPOMENA: benchmark/results.csv i benchmark/figures/ se NAMJERNO commitaju -
+# mjerenje se ne pokrece na serveru, pa bez njih Benchmark stranica ostaje prazna.
