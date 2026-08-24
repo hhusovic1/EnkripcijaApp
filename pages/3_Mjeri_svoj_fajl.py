@@ -20,6 +20,7 @@ sys.path.insert(0, KORIJEN)
 sys.path.insert(0, os.path.join(KORIJEN, "benchmark"))
 
 import measure_file as mf  # noqa: E402
+import app_ui  # noqa: E402
 import plot_results  # noqa: E402
 
 st.set_page_config(page_title="Mjeri svoj fajl", page_icon="📁", layout="wide")
@@ -40,6 +41,8 @@ def ucitaj_propusnosti(putanja: str, izmijenjen: float) -> dict:
     najvece = enc.sort_values("velicina_bajta").groupby("algoritam").last()
     return najvece["propusnost_mb_s"].to_dict()
 
+
+app_ui.zaglavlje("pages/3_Mjeri_svoj_fajl.py")
 
 st.title("📁 Mjeri svoj fajl")
 st.markdown(
