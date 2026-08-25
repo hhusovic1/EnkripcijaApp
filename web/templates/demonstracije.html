@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block naslov %}Sigurnosne demonstracije · Enkripcijski algoritmi{% endblock %}
+{% block naslov %}Sigurnosne demonstracije · EncryptionApp{% endblock %}
 
 {% block sadrzaj %}
 <h1>Sigurnosne demonstracije</h1>
@@ -24,10 +24,10 @@
     <div class="panel">
         <div class="mreza mreza-3">
             <div>
-                <label for="izbor-grupe">Parametri grupe</label>
+                <label for="izbor-grupe">Javni parametri (prost broj p i generator g)</label>
                 <select id="izbor-grupe">
                     {% for g in grupe %}
-                    <option value="{{ g.id }}">{{ g.naziv }}</option>
+                    <option value="{{ g.id }}">{{ g.oznaka }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -43,17 +43,19 @@
                 <input type="text" id="unos-poruke" value="{{ podrazumijevana_poruka }}">
             </div>
         </div>
-        <p class="prigusen" id="opis-grupe" style="margin:.7rem 0 0"></p>
+        <div class="objasnjenje" id="opis-grupe"></div>
     </div>
 
     <div class="panel">
         <div class="red-dugmadi">
             <button id="dugme-mitm">Pokreni razmjenu</button>
+            <button class="sekundarno skriven" id="dugme-mitm-nazad">◂ Nazad</button>
             <button class="sekundarno skriven" id="dugme-mitm-dalje">Sljedeći korak ▸</button>
-            <button class="sekundarno skriven" id="dugme-mitm-sve">Prikaži sve</button>
+            <button class="sekundarno skriven" id="dugme-mitm-sve">Preskoči na kraj</button>
             <span class="prigusen" id="status-mitm"></span>
         </div>
         <div class="traka-napretka skriven" id="traka-mitm"><div style="width:0"></div></div>
+        <div class="koraci-brojevi skriven" id="brojevi-mitm"></div>
         <div id="koraci-mitm"></div>
         <div id="zakljucak-mitm"></div>
     </div>
@@ -63,20 +65,58 @@
             Kako izgleda ista razmjena bez i sa napadačem
         </summary>
         <div class="tabela-omot" style="margin-top:.9rem">
-            <table>
+            <table class="poredjenje">
                 <thead>
-                    <tr><th></th><th>Bez Mallory</th><th>Sa Mallory</th></tr>
+                    <tr>
+                        <th></th>
+                        <th><span class="ishod dobar">Bez Mallory</span></th>
+                        <th><span class="ishod los">Sa Mallory</span></th>
+                    </tr>
                 </thead>
                 <tbody>
-                    <tr><td>Broj razmjena</td><td>jedna</td><td><strong>dvije odvojene</strong></td></tr>
-                    <tr><td>Alicina tajna</td><td><code>g^ab mod p</code></td><td><code>g^(a·m₁) mod p</code></td></tr>
-                    <tr><td>Bobova tajna</td><td><code>g^ab</code> — <strong>ista</strong></td><td><code>g^(b·m₂)</code> — <strong>različita</strong></td></tr>
-                    <tr><td>Ko zna ključ</td><td>Alice, Bob</td><td>Alice+Mallory, Bob+Mallory</td></tr>
-                    <tr><td>Šta vidi napadač</td><td><code>p, g, A, B</code> — beskorisno</td><td><strong>sve, u čitljivom obliku</strong></td></tr>
+                    <tr>
+                        <td>Broj razmjena</td>
+                        <td>jedna</td>
+                        <td><span class="istice-lose">dvije odvojene</span></td>
+                    </tr>
+                    <tr>
+                        <td>Alicina tajna</td>
+                        <td><span class="formula">g<sup>ab</sup> mod p</span></td>
+                        <td><span class="formula">g<sup>a·m₁</sup> mod p</span></td>
+                    </tr>
+                    <tr>
+                        <td>Bobova tajna</td>
+                        <td>
+                            <span class="formula">g<sup>ab</sup> mod p</span>
+                            <span class="istice-dobro">ista</span>
+                        </td>
+                        <td>
+                            <span class="formula">g<sup>b·m₂</sup> mod p</span>
+                            <span class="istice-lose">različita</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Ko zna ključ</td>
+                        <td>Alice, Bob</td>
+                        <td>Alice + Mallory, Bob + Mallory</td>
+                    </tr>
+                    <tr>
+                        <td>Šta vidi napadač</td>
+                        <td>
+                            <span class="formula">p, g, A, B</span>
+                            <span class="prigusen">— beskorisno</span>
+                        </td>
+                        <td><span class="istice-lose">sve, u čitljivom obliku</span></td>
+                    </tr>
                 </tbody>
             </table>
         </div>
-        <p class="prigusen" style="margin-bottom:0">
+        <p class="prigusen" style="margin:.9rem 0 0">
+            <span class="formula mala">m₁</span> i <span class="formula mala">m₂</span>
+            su Malloryni tajni eksponenti — jedan koji koristi prema Alice, drugi
+            prema Bobu. Zato nastaju dvije različite tajne, a Mallory zna obje.
+        </p>
+        <p class="prigusen" style="margin:.5rem 0 0">
             Alice i Bob bi napad otkrili kad bi uporedili svoje tajne — ali osnovni
             protokol taj korak nema, a i da ga ima, poređenje bi išlo preko istog
             kanala koji Mallory kontroliše.

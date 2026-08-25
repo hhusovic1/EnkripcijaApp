@@ -168,5 +168,10 @@ export interface OdgovorWiener {
 export interface Grupa {
     id: string;
     naziv: string;
+    /** Citljiv naziv za padajuci meni. */
+    oznaka: string;
     opis: string;
+    /** Duzina prostog broja p u bitima. */
+    bita: number;
+    g: number;
 }

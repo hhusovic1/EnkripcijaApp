@@ -18,11 +18,18 @@ declare global {
         MJERENJA: Mjerenje[];
         BOJE: Record<string, string>;
         POREDBENA_VELICINA: number;
+        NAZIVI_OPERACIJA: Record<string, string>;
     }
 }
 
 const MJERENJA = window.MJERENJA;
 const BOJE = window.BOJE;
+const NAZIVI_OPERACIJA = window.NAZIVI_OPERACIJA;
+
+/** CSV nosi snake_case ("generisanje_kljuca"); u tabeli stoji čitljiv naziv. */
+function nazivOperacije(operacija: string): string {
+    return NAZIVI_OPERACIJA[operacija] ?? operacija.replace(/_/g, ' ');
+}
 
 function boja(algoritam: string): string {
     return BOJE[algoritam] ?? '#888888';
@@ -328,20 +335,25 @@ function grafPoredjenja(izabrani: Set<string>, velicina: number): void {
 
 function popuniTabelu(izabrani: Set<string>): void {
     const operacija = el<HTMLSelectElement>('filter-operacije').value;
+    const algoritam = el<HTMLSelectElement>('filter-algoritma').value;
     const tijelo = el<HTMLTableSectionElement>('tabela-rezultata').querySelector('tbody');
     if (!tijelo) return;
 
+    // Izbor algoritma u filteru je jaci od kvacica iznad grafova — kad je
+    // postavljen, tabela pokazuje samo taj algoritam.
     const redovi = MJERENJA
-        .filter((m) => izabrani.has(m.algoritam))
+        .filter((m) => (algoritam ? m.algoritam === algoritam : izabrani.has(m.algoritam)))
         .filter((m) => !operacija || m.operacija === operacija)
         .sort((a, b) => a.algoritam.localeCompare(b.algoritam)
             || a.operacija.localeCompare(b.operacija)
             || (a.velicina_bajta ?? 0) - (b.velicina_bajta ?? 0));
 
+    el('dugme-ponisti').classList.toggle('skriven', !algoritam && !operacija);
+
     tijelo.innerHTML = redovi.map((m) => `
         <tr>
             <td>${escapeHtml(m.algoritam)}</td>
-            <td>${escapeHtml(m.operacija)}</td>
+            <td><span class="oznaka-operacije">${escapeHtml(nazivOperacije(m.operacija))}</span></td>
             <td class="broj">${m.velicina_bajta === null ? '—' : formatirajBajtove(m.velicina_bajta)}</td>
             <td class="broj">${m.duzina_kljuca_bita ?? '—'}</td>
             <td class="broj">${formatirajVrijeme(m.srednje_vrijeme_s)}</td>
@@ -351,8 +363,20 @@ function popuniTabelu(izabrani: Set<string>): void {
         </tr>
     `).join('');
 
-    el('sazetak-tabele').textContent =
-        `Prikazano ${redovi.length} od ukupno ${MJERENJA.length} mjerenja.`;
+    if (redovi.length === 0) {
+        tijelo.innerHTML = `<tr><td colspan="8" class="prazna-tabela">
+            Nema mjerenja za izabranu kombinaciju filtera.
+        </td></tr>`;
+    }
+
+    const opis = [
+        algoritam || null,
+        operacija ? nazivOperacije(operacija).toLowerCase() : null,
+    ].filter(Boolean).join(', ');
+
+    el('sazetak-tabele').textContent = opis
+        ? `Prikazano ${redovi.length} od ukupno ${MJERENJA.length} mjerenja (${opis}).`
+        : `Prikazano ${redovi.length} od ukupno ${MJERENJA.length} mjerenja.`;
 }
 
 // ------------------------------------------------------------------ Osvježavanje
@@ -372,6 +396,13 @@ document.querySelectorAll<HTMLInputElement>('#lista-algoritama input')
 
 el<HTMLSelectElement>('izbor-velicine').addEventListener('change', osvjezi);
 el<HTMLSelectElement>('filter-operacije').addEventListener('change', osvjezi);
+el<HTMLSelectElement>('filter-algoritma').addEventListener('change', osvjezi);
+
+el<HTMLButtonElement>('dugme-ponisti').addEventListener('click', () => {
+    el<HTMLSelectElement>('filter-operacije').value = '';
+    el<HTMLSelectElement>('filter-algoritma').value = '';
+    osvjezi();
+});
 
 el<HTMLButtonElement>('dugme-svi').addEventListener('click', () => {
     document.querySelectorAll<HTMLInputElement>('#lista-algoritama input')

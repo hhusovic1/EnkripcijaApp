@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block naslov %}Enkripcijski algoritmi{% endblock %}</title>
+    <title>{% block naslov %}EncryptionApp{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔐</text></svg>">
 </head>
@@ -12,7 +12,8 @@
 <header class="zaglavlje">
     <div class="zaglavlje-sadrzaj">
         <a class="logo" href="{{ url_for('glavni.pocetna') }}">
-            Enkripcijski <span>algoritmi</span>
+            <span class="logo-znak">🔐</span>
+            <span class="logo-tekst">Encryption<span class="akcenat">App</span></span>
         </a>
         <nav class="navigacija">
             {% for putanja, oznaka in navigacija %}

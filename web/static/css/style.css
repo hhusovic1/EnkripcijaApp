@@ -1,10 +1,12 @@
 /* ==========================================================================
-   Enkripcijski algoritmi - stilovi
+   EncryptionApp - stilovi
    Bez frameworka: cijela aplikacija ima cetiri stranice i par tipova
    komponenti, pa bi Bootstrap donio vise tezine nego koristi.
    ========================================================================== */
 
 :root {
+    color-scheme: dark;
+
     --pozadina: #0f1115;
     --panel: #171a21;
     --panel-svjetliji: #1e222b;
@@ -60,14 +62,32 @@ body {
 }
 
 .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
     font-weight: 700;
+    font-size: 1.02rem;
     letter-spacing: -.01em;
     color: var(--tekst);
     text-decoration: none;
     white-space: nowrap;
 }
 
-.logo span { color: var(--akcenat); }
+.logo-znak {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 8px;
+    background: var(--panel-svjetliji);
+    border: 1px solid var(--ivica);
+    font-size: .95rem;
+    line-height: 1;
+}
+
+.logo .akcenat { color: var(--akcenat); }
+.logo:hover .logo-znak { border-color: var(--akcenat); }
 
 .navigacija {
     display: flex;
@@ -99,7 +119,10 @@ h1 { font-size: 1.9rem; margin: 0 0 .4rem; letter-spacing: -.02em; }
 h2 { font-size: 1.3rem; margin: 2rem 0 .75rem; letter-spacing: -.01em; }
 h3 { font-size: 1.05rem; margin: 1.25rem 0 .5rem; }
 
-.podnaslov { color: var(--tekst-prigusen); margin: 0 0 1.5rem; }
+.podnaslov { color: var(--tekst-prigusen); margin: 0 0 1.5rem; max-width: 62ch; }
+
+.naslov-hero { font-size: 2.4rem; margin-bottom: .5rem; }
+.naslov-hero span { color: var(--akcenat); }
 
 a { color: var(--akcenat); }
 
@@ -179,9 +202,36 @@ select, input[type="text"], input[type="number"], textarea {
 
 textarea { resize: vertical; min-height: 6.5rem; font-family: var(--font-mono); font-size: .88rem; }
 
+/* Nativna strelica se razlikuje po platformama - vlastita je dosljednija */
+select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 2.2rem;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2398a1b3' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right .7rem center;
+    background-size: .75rem;
+    transition: border-color .15s;
+}
+
+select:hover { border-color: var(--akcenat-tamni); }
+
 select:focus, input:focus, textarea:focus {
     outline: none;
     border-color: var(--akcenat);
+}
+
+/* Naziv operacije u tabeli rezultata */
+.oznaka-operacije {
+    display: inline-block;
+    padding: .1rem .55rem;
+    border-radius: 999px;
+    background: var(--panel-svjetliji);
+    border: 1px solid var(--ivica);
+    color: var(--tekst-prigusen);
+    font-size: .8rem;
+    white-space: nowrap;
 }
 
 button {
@@ -279,11 +329,120 @@ pre.izlaz {
 
 .tabela-omot { overflow-x: auto; }
 
+/* Tabela sirovih brojeva ima preko sto redova - skrol s pripijenim zaglavljem
+   je citljiviji od beskonacnog niza redova na stranici. */
+.tabela-skrol {
+    max-height: 30rem;
+    overflow-y: auto;
+    border: 1px solid var(--ivica);
+    border-radius: 8px;
+}
+
+.tabela-skrol thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--panel-svjetliji);
+    /* Ivica kroz border ne ostaje uz pripijeno zaglavlje, pa ide kao sjena */
+    box-shadow: inset 0 -1px 0 var(--ivica);
+    border-bottom: none;
+}
+
+.tabela-skrol tbody tr:last-child td { border-bottom: none; }
+
 table { border-collapse: collapse; width: 100%; font-size: .87rem; }
 th, td { text-align: left; padding: .5rem .7rem; border-bottom: 1px solid var(--ivica); }
 th { color: var(--tekst-prigusen); font-weight: 600; white-space: nowrap; }
 tbody tr:hover { background: var(--panel-svjetliji); }
 td.broj { font-family: var(--font-mono); text-align: right; }
+
+/* --------------------------------------------------- Tabela poredjenja (MITM) */
+
+.poredjenje td { vertical-align: middle; }
+
+.poredjenje th:first-child,
+.poredjenje td:first-child {
+    width: 30%;
+    min-width: 9rem;
+    color: var(--tekst);
+    font-weight: 600;
+}
+
+/* Kolone se citaju kao "sigurno" i "napadnuto", pa nose i boju */
+.poredjenje tbody td:nth-child(2) { box-shadow: inset 2px 0 0 rgba(46, 139, 87, .45); }
+.poredjenje tbody td:nth-child(3) { box-shadow: inset 2px 0 0 rgba(193, 68, 14, .45); }
+.poredjenje td:not(:first-child) { padding-left: 1rem; }
+
+.ishod { display: inline-flex; align-items: center; gap: .45rem; }
+
+.ishod::before {
+    content: '';
+    width: .5rem;
+    height: .5rem;
+    border-radius: 999px;
+    flex: none;
+}
+
+.ishod.dobar { color: #6fc79a; }
+.ishod.dobar::before { background: var(--uspjeh); }
+.ishod.los { color: #e08a6f; }
+.ishod.los::before { background: var(--greska); }
+
+.istice-dobro, .istice-lose {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.istice-dobro { color: #6fc79a; }
+.istice-lose { color: #e08a6f; }
+
+/* Matematika: eksponent kao eksponent, a ne kao "^(a*m1)" */
+.formula {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: .85rem;
+    background: var(--pozadina);
+    border: 1px solid var(--ivica);
+    border-radius: 6px;
+    padding: .15rem .5rem;
+    white-space: nowrap;
+}
+
+.formula sup {
+    font-size: .72em;
+    color: var(--akcenat);
+    letter-spacing: .02em;
+}
+
+.formula.mala { padding: 0 .35rem; font-size: .8rem; }
+
+td.prazna-tabela {
+    text-align: center;
+    color: var(--tekst-prigusen);
+    padding: 2rem .7rem;
+}
+
+/* ------------------------------------------------------------------ Filteri */
+
+.filteri {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: .9rem;
+    margin-bottom: 1rem;
+}
+
+.filteri .filter { flex: 1 1 13rem; min-width: 11rem; max-width: 17rem; }
+.filteri .filter label { margin-bottom: .3rem; }
+
+.filter-akcije {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-left: auto;
+}
+
+.veza-dugme { text-decoration: none; }
 
 /* -------------------------------------------------------------------- Koraci */
 
@@ -298,6 +457,75 @@ td.broj { font-family: var(--font-mono); text-align: right; }
 
 .korak.istaknut { border-left-color: var(--akcenat); }
 .korak .korak-naslov { font-weight: 600; margin-bottom: .1rem; }
+
+.korak-oznaka {
+    display: inline-block;
+    margin-right: .5rem;
+    padding: .05rem .5rem;
+    border-radius: 999px;
+    background: var(--panel-svjetliji);
+    border: 1px solid var(--ivica);
+    color: var(--akcenat);
+    font-size: .75rem;
+    font-weight: 600;
+    vertical-align: .05rem;
+}
+
+/* Numerisani koraci — sluze i kao prikaz napretka i kao skok na vidjeni korak */
+.koraci-brojevi { display: flex; flex-wrap: wrap; gap: .35rem; margin-bottom: 1rem; }
+
+.korak-broj {
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border-radius: 999px;
+    background: var(--panel-svjetliji);
+    border: 1px solid var(--ivica);
+    color: var(--tekst-prigusen);
+    font-size: .85rem;
+    font-weight: 600;
+}
+
+.korak-broj:hover:not(:disabled) { background: var(--ivica); color: var(--tekst); }
+.korak-broj.aktivan { background: var(--akcenat); border-color: var(--akcenat); color: #08131a; }
+.korak-broj:disabled { opacity: .4; cursor: default; }
+
+.pregled-naslov {
+    color: var(--tekst-prigusen);
+    font-size: .82rem;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    margin-bottom: .6rem;
+}
+
+/* Objasnjenje ispod izbora parametara */
+.objasnjenje {
+    margin-top: .9rem;
+    padding-top: .9rem;
+    border-top: 1px solid var(--ivica);
+    font-size: .88rem;
+    color: var(--tekst-prigusen);
+}
+
+.objasnjenje p { margin: 0 0 .4rem; }
+
+.objasnjenje-brojevi {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin-bottom: .6rem;
+}
+
+.objasnjenje-brojevi span {
+    padding: .15rem .6rem;
+    border-radius: 999px;
+    background: var(--panel-svjetliji);
+    border: 1px solid var(--ivica);
+    font-family: var(--font-mono);
+    font-size: .8rem;
+}
+
+.objasnjenje-brojevi strong { color: var(--akcenat); }
 .korak .korak-akter { color: var(--tekst-prigusen); font-size: .82rem; margin-bottom: .5rem; }
 .korak .korak-opis { font-size: .9rem; margin-bottom: .6rem; }
 
@@ -404,9 +632,13 @@ td.broj { font-family: var(--font-mono); text-align: right; }
 @media (max-width: 620px) {
     main { padding: 1.25rem .9rem 3rem; }
     h1 { font-size: 1.5rem; }
+    .naslov-hero { font-size: 1.8rem; }
     .par { flex-direction: column; gap: .1rem; }
     .par .kljuc { min-width: 0; }
     .navigacija { width: 100%; }
+    .filteri .filter { max-width: none; }
+    .filter-akcije { margin-left: 0; width: 100%; }
+    .tabela-skrol { max-height: 22rem; }
     .navigacija a { padding: .35rem .6rem; font-size: .85rem; }
     .graf-omot { height: 300px; }
 }

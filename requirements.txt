@@ -9,6 +9,7 @@ matplotlib>=3.8
 
 # Web aplikacija
 flask>=3.0
+reportlab>=4.0  # PDF izvjestaj s rezultatima mjerenja
 gunicorn>=21.2
 
 # Streamlit verzija aplikacije - zadrzana dok Flask ne preuzme sve;

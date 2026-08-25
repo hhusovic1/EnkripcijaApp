@@ -36,11 +36,24 @@ from core import aes, modes  # noqa: E402
 # ---------------------------------------------------------------------------
 
 class Grupa:
+    """
+    Javni Diffie-Hellman parametri.
+
+    `naziv` je kratak identifikator (koristi ga --grupa i web API), `opis`
+    je kratko objasnjenje za ispis u terminalu. Duzi tekst za web je u
+    web/routes.py, uz ostale nazive koje aplikacija prikazuje.
+    """
+
     def __init__(self, naziv, p, g, opis):
         self.naziv = naziv
         self.p = p
         self.g = g
         self.opis = opis
+
+    @property
+    def bita(self):
+        """Duzina prostog broja p u bitima - mjera sigurnosti grupe."""
+        return self.p.bit_length()
 
 
 # Mali siguran prost broj p = 2q + 1 (q = 9223372036854777359), g = 2.

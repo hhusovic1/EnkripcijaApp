@@ -86,9 +86,14 @@ export function formatirajVrijeme(sekunde: number): string {
     return `${(sekunde * 1e6).toFixed(0)} µs`;
 }
 
+/** 100 -> "100", 1.50 -> "1.5" — nule se skidaju samo iza decimalne tacke. */
+function bezSuvisnihNula(broj: number): string {
+    return broj.toPrecision(3).replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
+}
+
 export function formatirajBajtove(bajtova: number): string {
-    if (bajtova >= 1e6) return `${(bajtova / 1e6).toPrecision(3).replace(/\.?0+$/, '')} MB`;
-    if (bajtova >= 1e3) return `${(bajtova / 1e3).toPrecision(3).replace(/\.?0+$/, '')} KB`;
+    if (bajtova >= 1e6) return `${bezSuvisnihNula(bajtova / 1e6)} MB`;
+    if (bajtova >= 1e3) return `${bezSuvisnihNula(bajtova / 1e3)} KB`;
     return `${bajtova} B`;
 }
 

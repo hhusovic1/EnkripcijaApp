@@ -46,6 +46,37 @@ NAZIVI_KATEGORIJA = {
     "asimetricni": "Asimetrični",
 }
 
+# CSV čuva operacije u snake_case obliku; u UI-ju idu čitljivi nazivi
+NAZIVI_OPERACIJA = {
+    "enkripcija": "Enkripcija",
+    "dekripcija": "Dekripcija",
+    "generisanje_kljuca": "Generisanje ključa",
+    "razmjena_kljuca": "Razmjena ključa",
+}
+
+
+def naziv_operacije(operacija: str) -> str:
+    return NAZIVI_OPERACIJA.get(operacija, operacija.replace("_", " ").capitalize())
+
+
+# Grupe za MITM demonstraciju: attacks/mitm_dh.py drzi brojeve, ovdje je tekst
+# koji se prikazuje (isto kao NAZIVI_OPERACIJA iznad)
+OPIS_GRUPA = {
+    "demo": {
+        "oznaka": "Demo grupa — mali p (65 bita)",
+        "opis": "Prost broj je namjerno mali da sve vrijednosti stanu na ekran i "
+                "razmjena bude trenutna. Za stvarnu upotrebu je predaleko premalen: "
+                "današnji računar bi iz javnog A izračunao tajni a.",
+    },
+    "rfc3526-2048": {
+        "oznaka": "RFC 3526, grupa 14 — realni p (2048 bita)",
+        "opis": "Standardizovani parametri koje stvarno koriste IPsec/IKE i TLS. "
+                "p ima preko 600 cifara pa je u prikazu skraćen, a računanje "
+                "traje osjetno duže nego s demo grupom.",
+    },
+}
+
+
 POREDBENA_VELICINA = 4096
 
 
@@ -122,7 +153,9 @@ def benchmark():
         dostupne_velicine=dostupne,
         poredbena_velicina=(POREDBENA_VELICINA if POREDBENA_VELICINA in dostupne
                             else (dostupne[len(dostupne) // 2] if dostupne else 0)),
-        operacije=sorted(df["operacija"].unique()),
+        operacije=[{"vrijednost": o, "oznaka": naziv_operacije(o)}
+                   for o in sorted(df["operacija"].unique())],
+        nazivi_operacija_json=json.dumps(NAZIVI_OPERACIJA, ensure_ascii=False),
     )
 
 
@@ -130,7 +163,9 @@ def benchmark():
 def demonstracije():
     from attacks import mitm_dh
 
-    grupe = [{"id": g.naziv, "naziv": g.naziv, "opis": g.opis}
+    grupe = [{"id": g.naziv, "naziv": g.naziv, "bita": g.bita, "g": g.g,
+              "oznaka": OPIS_GRUPA.get(g.naziv, {}).get("oznaka", g.naziv),
+              "opis": OPIS_GRUPA.get(g.naziv, {}).get("opis", g.opis)}
              for g in mitm_dh.GRUPE.values()]
 
     return render_template(
@@ -146,3 +181,20 @@ def preuzmi_csv():
     if not os.path.exists(RESULTS_CSV):
         abort(404)
     return send_file(RESULTS_CSV, as_attachment=True, download_name="results.csv")
+
+
+@glavni.route("/benchmark/rezultati.pdf")
+def preuzmi_pdf():
+    """Ista tabela kao na stranici, ali za štampu — sva mjerenja, po algoritmu."""
+    if not os.path.exists(RESULTS_CSV):
+        abort(404)
+
+    from .izvjestaj import napravi_pdf
+
+    df = pd.read_csv(RESULTS_CSV)
+    return send_file(
+        napravi_pdf(df, NAZIVI_OPERACIJA, NAZIVI_KATEGORIJA),
+        as_attachment=True,
+        download_name="EncryptionApp-rezultati.pdf",
+        mimetype="application/pdf",
+    )

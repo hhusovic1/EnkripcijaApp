@@ -41,6 +41,13 @@ def test_preuzimanje_csv():
     assert b"algoritam" in odgovor.data[:200]
 
 
+def test_preuzimanje_pdf():
+    odgovor = klijent.get("/benchmark/rezultati.pdf")
+    assert odgovor.status_code == 200
+    assert odgovor.mimetype == "application/pdf"
+    assert odgovor.data[:5] == b"%PDF-"
+
+
 # ---------------------------------------------------------------------------
 # Simetricni algoritmi
 # ---------------------------------------------------------------------------

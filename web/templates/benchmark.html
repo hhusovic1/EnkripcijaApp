@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block naslov %}Benchmark · Enkripcijski algoritmi{% endblock %}
+{% block naslov %}Benchmark · EncryptionApp{% endblock %}
 
 {% block sadrzaj %}
 <h1>Benchmark</h1>
@@ -146,19 +146,37 @@
 
 <h2>Sirovi brojevi</h2>
 <div class="panel">
-    <div class="red-dugmadi" style="margin-bottom:.8rem">
-        <label style="margin:0">Operacija</label>
-        <select id="filter-operacije" style="max-width:14rem">
-            <option value="">sve</option>
-            {% for o in operacije %}
-            <option value="{{ o }}">{{ o }}</option>
-            {% endfor %}
-        </select>
-        <a href="{{ url_for('glavni.preuzmi_csv') }}">
-            <button class="sekundarno" type="button">Preuzmi results.csv</button>
-        </a>
+    <div class="filteri">
+        <div class="filter">
+            <label for="filter-algoritma">Algoritam</label>
+            <select id="filter-algoritma">
+                <option value="">Svi algoritmi</option>
+                {% for naziv, algoritmi in algoritmi_po_kategoriji.items() %}
+                <optgroup label="{{ naziv }}">
+                    {% for a in algoritmi %}
+                    <option value="{{ a }}">{{ a }}</option>
+                    {% endfor %}
+                </optgroup>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter">
+            <label for="filter-operacije">Operacija</label>
+            <select id="filter-operacije">
+                <option value="">Sve operacije</option>
+                {% for o in operacije %}
+                <option value="{{ o.vrijednost }}">{{ o.oznaka }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-akcije">
+            <button class="sekundarno skriven" type="button" id="dugme-ponisti">Poništi filtere</button>
+            <a class="veza-dugme" href="{{ url_for('glavni.preuzmi_pdf') }}">
+                <button type="button">Preuzmi PDF</button>
+            </a>
+        </div>
     </div>
-    <div class="tabela-omot">
+    <div class="tabela-omot tabela-skrol">
         <table id="tabela-rezultata">
             <thead>
                 <tr>
@@ -171,6 +189,10 @@
         </table>
     </div>
     <p class="prigusen" id="sazetak-tabele" style="margin-bottom:0"></p>
+    <p class="prigusen" style="margin:.2rem 0 0">
+        PDF sadrži sva mjerenja, grupisana po algoritmu — filteri iznad mijenjaju
+        samo prikaz na stranici.
+    </p>
 </div>
 
 {% endif %}
@@ -182,6 +204,7 @@
     window.MJERENJA = {{ mjerenja_json | safe }};
     window.BOJE = {{ boje_json | safe }};
     window.POREDBENA_VELICINA = {{ poredbena_velicina }};
+    window.NAZIVI_OPERACIJA = {{ nazivi_operacija_json | safe }};
 </script>
 <script src="{{ url_for('static', filename='js/benchmark.js') }}"></script>
 {% endif %}

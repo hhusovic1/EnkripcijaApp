@@ -5,7 +5,7 @@
  * otkriva korak po korak jer je poenta napada u redoslijedu poteza, a ne u
  * krajnjem broju.
  */
-import type { Grupa, KorakWiener, OdgovorMitm, OdgovorWiener } from './tipovi';
+import type { Grupa, KorakMitm, KorakWiener, OdgovorMitm, OdgovorWiener } from './tipovi';
 import {
     el, escapeHtml, mozdaEl, par, posalji, poruka, poveziTabove, skrati,
     tekstGreske, zauzmi,
@@ -28,44 +28,96 @@ const izborScenarija = el<HTMLSelectElement>('izbor-scenarija');
 const unosPoruke = el<HTMLInputElement>('unos-poruke');
 
 const dugmeMitm = el<HTMLButtonElement>('dugme-mitm');
+const dugmeNazad = el<HTMLButtonElement>('dugme-mitm-nazad');
 const dugmeDalje = el<HTMLButtonElement>('dugme-mitm-dalje');
 const dugmeSve = el<HTMLButtonElement>('dugme-mitm-sve');
 
 let mitm: OdgovorMitm | null = null;
-let vidljivo = 0;
+/** Koji se korak trenutno prikazuje (1..n); 0 znaci da razmjena nije pokrenuta. */
+let korakBroj = 0;
+/** Dokle je korisnik stigao — do tog koraka moze skakati brojevima. */
+let dosegnuto = 0;
+/** Zavrsni pregled: svi koraci odjednom, tek kad se prodje kroz sve. */
+let pregledSvih = false;
 
 function opisGrupe(): void {
     const grupa = window.GRUPE.find((g) => g.id === izborGrupe.value);
-    el('opis-grupe').textContent = grupa?.opis ?? '';
+    if (!grupa) {
+        el('opis-grupe').innerHTML = '';
+        return;
+    }
+    el('opis-grupe').innerHTML = `
+        <div class="objasnjenje-brojevi">
+            <span><strong>p</strong> — prost broj, ${grupa.bita} bita</span>
+            <span><strong>g</strong> — generator, ${grupa.g}</span>
+        </div>
+        <p>${escapeHtml(grupa.opis)}</p>
+        <p class="prigusen" style="margin:0">
+            p i g su javni: šalju se otvoreno i nisu tajna. Tajni su samo
+            eksponenti a i b, koje Alice i Bob nikad ne šalju kanalom.
+        </p>`;
 }
 
 izborGrupe.addEventListener('change', opisGrupe);
 opisGrupe();
 
-function nacrtajKorake(): void {
-    if (!mitm) return;
-
-    el('koraci-mitm').innerHTML = mitm.koraci.slice(0, vidljivo).map((korak) => `
+function karticaKoraka(korak: KorakMitm): string {
+    return `
         <div class="korak ${korak.istaknuto ? 'istaknut' : ''}">
-            <div class="korak-naslov">${korak.broj}. ${escapeHtml(korak.naslov)}</div>
+            <div class="korak-naslov">
+                <span class="korak-oznaka">Korak ${korak.broj}</span>
+                ${escapeHtml(korak.naslov)}
+            </div>
             <div class="korak-akter">${escapeHtml(korak.akter)}</div>
             <div class="korak-opis">${escapeHtml(korak.opis)}</div>
             ${korak.vrijednosti.map((v) => par(v.kljuc, skrati(v.vrijednost, 60))).join('')}
-        </div>
-    `).join('');
+        </div>`;
+}
+
+function nacrtajKorake(): void {
+    if (!mitm) return;
+    const ukupno = mitm.koraci.length;
+    const zadnji = korakBroj >= ukupno;
+
+    // Korak po korak se vidi samo tekuci korak — inace se stranica razvuce i
+    // ono sto se upravo desilo zavrsi ispod ekrana.
+    el('koraci-mitm').innerHTML = pregledSvih
+        ? `<div class="pregled-naslov">Cijela razmjena — svih ${ukupno} koraka</div>`
+          + mitm.koraci.map(karticaKoraka).join('')
+        : karticaKoraka(mitm.koraci[korakBroj - 1]);
 
     const traka = el('traka-mitm');
     traka.classList.remove('skriven');
     (traka.firstElementChild as HTMLElement).style.width =
-        `${(vidljivo / mitm.koraci.length) * 100}%`;
-    el('status-mitm').textContent = `Korak ${vidljivo} od ${mitm.koraci.length}`;
+        `${((pregledSvih ? ukupno : korakBroj) / ukupno) * 100}%`;
 
-    const gotovo = vidljivo >= mitm.koraci.length;
-    dugmeDalje.classList.toggle('skriven', gotovo);
-    dugmeSve.classList.toggle('skriven', gotovo);
+    el('status-mitm').textContent = pregledSvih
+        ? `Završeno — svih ${ukupno} koraka`
+        : `Korak ${korakBroj} od ${ukupno}`;
 
-    el('zakljucak-mitm').innerHTML = gotovo ? zakljucak(mitm) : '';
+    const brojevi = el('brojevi-mitm');
+    brojevi.classList.remove('skriven');
+    brojevi.innerHTML = mitm.koraci.map((k) => `
+        <button type="button" class="korak-broj${!pregledSvih && k.broj === korakBroj ? ' aktivan' : ''}"
+                data-korak="${k.broj}" ${k.broj <= dosegnuto ? '' : 'disabled'}
+                title="Korak ${k.broj}: ${escapeHtml(k.naslov)}">${k.broj}</button>`).join('');
+
+    dugmeNazad.classList.toggle('skriven', pregledSvih || korakBroj <= 1);
+    dugmeDalje.classList.toggle('skriven', pregledSvih);
+    dugmeDalje.textContent = zadnji ? 'Prikaži sve korake ▤' : 'Sljedeći korak ▸';
+    dugmeSve.classList.toggle('skriven', pregledSvih || zadnji);
+
+    // Zakljucak ima smisla tek kad se vidjelo sta se u zadnjem koraku desilo.
+    el('zakljucak-mitm').innerHTML = zadnji ? zakljucak(mitm) : '';
 }
+
+el('brojevi-mitm').addEventListener('click', (dogadjaj) => {
+    const dugme = (dogadjaj.target as HTMLElement).closest<HTMLButtonElement>('.korak-broj');
+    if (!dugme || dugme.disabled) return;
+    korakBroj = Number(dugme.dataset.korak);
+    pregledSvih = false;
+    nacrtajKorake();
+});
 
 function zakljucak(rezultat: OdgovorMitm): string {
     if (rezultat.scenario === 'bez_mallory') {
@@ -94,7 +146,9 @@ dugmeMitm.addEventListener('click', async () => {
             scenario: izborScenarija.value,
             poruka: unosPoruke.value,
         });
-        vidljivo = 1;
+        korakBroj = 1;
+        dosegnuto = 1;
+        pregledSvih = false;
         nacrtajKorake();
     } catch (greska) {
         el('koraci-mitm').innerHTML = poruka('greska', escapeHtml(tekstGreske(greska)));
@@ -105,13 +159,25 @@ dugmeMitm.addEventListener('click', async () => {
 
 dugmeDalje.addEventListener('click', () => {
     if (!mitm) return;
-    vidljivo = Math.min(vidljivo + 1, mitm.koraci.length);
+    if (korakBroj >= mitm.koraci.length) {
+        pregledSvih = true;          // zadnji klik otvara pregled cijele razmjene
+    } else {
+        korakBroj += 1;
+        dosegnuto = Math.max(dosegnuto, korakBroj);
+    }
+    nacrtajKorake();
+});
+
+dugmeNazad.addEventListener('click', () => {
+    if (!mitm || korakBroj <= 1) return;
+    korakBroj -= 1;
     nacrtajKorake();
 });
 
 dugmeSve.addEventListener('click', () => {
     if (!mitm) return;
-    vidljivo = mitm.koraci.length;
+    korakBroj = mitm.koraci.length;
+    dosegnuto = mitm.koraci.length;
     nacrtajKorake();
 });
 
