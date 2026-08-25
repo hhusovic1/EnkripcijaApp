@@ -99,7 +99,7 @@ def test_core_rsa_predugacka_poruka():
     _bez_izuzetaka(app, "RSA - predugacka poruka")
 
     greske = " ".join(e.value for e in app.error)
-    assert "najviše" in greske and "3.5.3" in greske, (
+    assert "najviše" in greske and "hibridno" in greske, (
         "nema objasnjenja zasto poruka ne stane: %s" % greske[:200]
     )
 

@@ -93,11 +93,42 @@ Chart.defaults.maintainAspectRatio = false;
 
 // ------------------------------------------------------------------ Izbor
 
+/** Vrijednost filtera koja znaci "sve algoritme", nasuprot praznoj (crtica). */
+const SVI = '*';
+
+function sveKvacice(): HTMLInputElement[] {
+    return [...document.querySelectorAll<HTMLInputElement>('#lista-algoritama input')];
+}
+
 function odabrani(): Set<string> {
     const izabrani = new Set<string>();
     document.querySelectorAll<HTMLInputElement>('#lista-algoritama input:checked')
         .forEach((polje) => izabrani.add(polje.value));
     return izabrani;
+}
+
+/*
+ * Filter u tabeli i kvacice iznad grafova gledaju iste podatke, pa se drze
+ * zajedno: izbor u filteru ukljuci kvacicu (inace bi grafovi ostali prazni),
+ * a skidanje te kvacice vrati filter na crticu.
+ */
+
+function uskladiKvacice(izbor: string): void {
+    if (!izbor) return;
+    sveKvacice().forEach((polje) => {
+        if (izbor === SVI || polje.value === izbor) polje.checked = true;
+    });
+}
+
+function uskladiFilter(): void {
+    const filter = el<HTMLSelectElement>('filter-algoritma');
+    const izbor = filter.value;
+    if (!izbor) return;
+
+    const nedostaje = izbor === SVI
+        ? sveKvacice().some((polje) => !polje.checked)
+        : !sveKvacice().some((polje) => polje.value === izbor && polje.checked);
+    if (nedostaje) filter.value = '';
 }
 
 // ------------------------------------------------------------------ Grafovi
@@ -224,8 +255,17 @@ function grafGenerisanjaKljuca(izabrani: Set<string>): void {
             labels: rsa.map((m) => `${m.duzina_kljuca_bita} bita`),
             datasets: [{
                 label: 'RSA',
-                data: rsa.map((m) => ({ y: m.srednje_vrijeme_s, greska: m.std_dev_s })) as never,
-                parsing: { yAxisKey: 'y' },
+                /*
+                 * Tačke nose i `x` (oznaku kategorije). S parsing-om koji navodi
+                 * samo yAxisKey Chart.js traži podrazumijevano polje `x`, ne
+                 * nađe ga, i graf ostane prazan uz uredno iscrtane ose.
+                 */
+                data: rsa.map((m) => ({
+                    x: `${m.duzina_kljuca_bita} bita`,
+                    y: m.srednje_vrijeme_s,
+                    greska: m.std_dev_s,
+                })) as never,
+                parsing: { xAxisKey: 'x', yAxisKey: 'y' },
                 borderColor: boja('RSA-2048'),
                 backgroundColor: boja('RSA-2048'),
                 borderWidth: 2,
@@ -335,7 +375,9 @@ function grafPoredjenja(izabrani: Set<string>, velicina: number): void {
 
 function popuniTabelu(izabrani: Set<string>): void {
     const operacija = el<HTMLSelectElement>('filter-operacije').value;
-    const algoritam = el<HTMLSelectElement>('filter-algoritma').value;
+    const izborAlgoritma = el<HTMLSelectElement>('filter-algoritma').value;
+    // "Svi algoritmi" nije filter nego prikaz svega oznacenog u panelu iznad
+    const algoritam = izborAlgoritma === SVI ? '' : izborAlgoritma;
     const tijelo = el<HTMLTableSectionElement>('tabela-rezultata').querySelector('tbody');
     if (!tijelo) return;
 
@@ -348,7 +390,7 @@ function popuniTabelu(izabrani: Set<string>): void {
             || a.operacija.localeCompare(b.operacija)
             || (a.velicina_bajta ?? 0) - (b.velicina_bajta ?? 0));
 
-    el('dugme-ponisti').classList.toggle('skriven', !algoritam && !operacija);
+    el('dugme-ponisti').classList.toggle('skriven', !izborAlgoritma && !operacija);
 
     tijelo.innerHTML = redovi.map((m) => `
         <tr>
@@ -364,13 +406,16 @@ function popuniTabelu(izabrani: Set<string>): void {
     `).join('');
 
     if (redovi.length === 0) {
+        const tekst = (!algoritam && izabrani.size === 0)
+            ? 'Nijedan algoritam nije označen — izaberi ih u panelu iznad.'
+            : 'Nema mjerenja za izabranu kombinaciju filtera.';
         tijelo.innerHTML = `<tr><td colspan="8" class="prazna-tabela">
-            Nema mjerenja za izabranu kombinaciju filtera.
+            ${escapeHtml(tekst)}
         </td></tr>`;
     }
 
     const opis = [
-        algoritam || null,
+        izborAlgoritma === SVI ? 'svi algoritmi' : algoritam || null,
         operacija ? nazivOperacije(operacija).toLowerCase() : null,
     ].filter(Boolean).join(', ');
 
@@ -391,12 +436,17 @@ function osvjezi(): void {
     popuniTabelu(izabrani);
 }
 
-document.querySelectorAll<HTMLInputElement>('#lista-algoritama input')
-    .forEach((polje) => polje.addEventListener('change', osvjezi));
+sveKvacice().forEach((polje) => polje.addEventListener('change', () => {
+    uskladiFilter();
+    osvjezi();
+}));
 
 el<HTMLSelectElement>('izbor-velicine').addEventListener('change', osvjezi);
 el<HTMLSelectElement>('filter-operacije').addEventListener('change', osvjezi);
-el<HTMLSelectElement>('filter-algoritma').addEventListener('change', osvjezi);
+el<HTMLSelectElement>('filter-algoritma').addEventListener('change', (dogadjaj) => {
+    uskladiKvacice((dogadjaj.target as HTMLSelectElement).value);
+    osvjezi();
+});
 
 el<HTMLButtonElement>('dugme-ponisti').addEventListener('click', () => {
     el<HTMLSelectElement>('filter-operacije').value = '';
@@ -405,14 +455,13 @@ el<HTMLButtonElement>('dugme-ponisti').addEventListener('click', () => {
 });
 
 el<HTMLButtonElement>('dugme-svi').addEventListener('click', () => {
-    document.querySelectorAll<HTMLInputElement>('#lista-algoritama input')
-        .forEach((polje) => { polje.checked = true; });
+    sveKvacice().forEach((polje) => { polje.checked = true; });
     osvjezi();
 });
 
 el<HTMLButtonElement>('dugme-nijedan').addEventListener('click', () => {
-    document.querySelectorAll<HTMLInputElement>('#lista-algoritama input')
-        .forEach((polje) => { polje.checked = false; });
+    sveKvacice().forEach((polje) => { polje.checked = false; });
+    uskladiFilter();
     osvjezi();
 });
 

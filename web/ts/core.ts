@@ -42,8 +42,7 @@ function prikaziAlgoritam(): void {
     const oznakaVrste = m.rucni
         ? '<span class="oznaka rucna">ručna implementacija</span>'
         : '<span class="oznaka biblioteka">biblioteka</span>';
-    el('meta-algoritma').innerHTML =
-        `${oznakaVrste} &nbsp; rad, sekcija <strong>${escapeHtml(m.sekcija)}</strong>`;
+    el('meta-algoritma').innerHTML = oznakaVrste;
 
     el('opis-algoritma').textContent = m.opis;
     el('napomena-algoritma').innerHTML = `<strong>Na šta paziti.</strong> ${escapeHtml(m.napomena)}`;
@@ -221,7 +220,7 @@ mozdaEl<HTMLButtonElement>('dugme-rsa-kljuc')?.addEventListener('click', async (
                     ${poruka('upozorenje',
                         'Privatni eksponent se u praksi <strong>nikad ne prikazuje niti prenosi</strong>. ' +
                         'Vidljiv je samo zato što je ovo demonstracija. Isto vrijedi za p, q i φ(n) — ' +
-                        'oni se nakon generisanja ključa uništavaju (3.3.3).')}
+                        'oni se nakon generisanja ključa uništavaju.')}
                     <details>
                         <summary style="cursor:pointer" class="prigusen">Prikaži p, q i φ(n)</summary>
                         <div style="margin-top:.5rem">
@@ -268,7 +267,7 @@ mozdaEl<HTMLButtonElement>('dugme-rsa-sifruj')?.addEventListener('click', async 
             </div>
             <p class="prigusen">
                 Dekripcija je znatno sporija jer je e = 65537 broj sa samo dva
-                postavljena bita, dok je d pune dužine modula (3.3.3).
+                postavljena bita, dok je d pune dužine modula.
             </p>
             <pre class="izlaz">${r.sifrat.hex}</pre>
             ${r.ispravno

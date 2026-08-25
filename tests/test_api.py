@@ -140,7 +140,7 @@ def test_rsa_predugacka_poruka():
     kod, r = _post("/api/rsa/sifruj",
                    {"n": k["n"], "e": k["e"], "d": k["d"], "tekst": "x" * 500})
     assert kod == 400
-    assert "3.5.3" in r["greska"], "greska treba uputiti na hibridnu shemu"
+    assert "hibridno" in r["greska"], "greska treba uputiti na hibridnu shemu"
 
 
 def test_rsa_nevazeca_duzina():

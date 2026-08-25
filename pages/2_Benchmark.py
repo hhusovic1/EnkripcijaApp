@@ -6,7 +6,7 @@ su prespore za rad uzivo u pregledniku (jedan prolaz kroz 64 KB traje sekundama)
 Rezultati se generisu offline sa `python benchmark/run_benchmark.py`.
 
 Grafovi se crtaju istim funkcijama koje prave i slike za rad (benchmark/plot_results.py),
-pa su brojevi u radu i u aplikaciji garantovano isti.
+pa su brojevi u aplikaciji i u izvjestaju garantovano isti.
 """
 import os
 import sys
@@ -70,7 +70,7 @@ st.markdown(
 
 st.warning(
     "**Kako čitati ove brojeve.** DES, 3DES, AES i RSA su ručne implementacije u "
-    "čistom Pythonu, pisane radi čitljivosti i podudaranja s opisom u radu — ne radi "
+    "čistom Pythonu, pisane radi čitljivosti — ne radi "
     "brzine. ChaCha20, ECDH i varijante označene *(biblioteka)* izvršavaju se kroz "
     "optimizovani C kod. Razlika među tim grupama mjeri **implementaciju**, ne samo "
     "algoritam. Poređenja unutar iste grupe su ono što nosi zaključak.",
@@ -107,7 +107,7 @@ with st.sidebar:
         st.subheader(naslov)
         for algoritam in algoritmi:
             kljuc = "alg_%s" % algoritam
-            if st.checkbox(algoritam, value=st.session_state.get(kljuc, True), key=kljuc):
+            if st.checkbox(algoritam, value=st.session_state.get(kljuc, False), key=kljuc):
                 odabrani.append(algoritam)
 
 if not odabrani:
@@ -178,11 +178,11 @@ petlja u Pythonu. Stvarna algoritamska razlika je još mnogo veća.
 
 Nesrazmjera enkripcija/dekripcija (RSA-4096: 0.5 ms naspram 133 ms) dolazi od toga
 što je `e = 65537` broj sa samo dva postavljena bita, dok je `d` pune dužine
-modula — tačno razlog zbog kojeg se `e = 65537` i bira (3.3.3).
+modula — tačno razlog zbog kojeg se `e = 65537` i bira.
 
 **Zaključak koji iz ovoga slijedi:** RSA se u praksi nikad ne koristi za enkripciju
-samih podataka, nego samo za zaštitu simetričnog ključa. To je hibridni
-kriptosistem iz **3.5.3** — možeš ga isprobati na stranici *Mjeri svoj fajl*.
+samih podataka, nego samo za zaštitu simetričnog ključa. To je **hibridni
+kriptosistem** — možeš ga isprobati na stranici *Mjeri svoj fajl*.
 """
         )
 

@@ -395,8 +395,11 @@ def mitm():
 def wiener():
     podaci = _telo()
     bita = _cio_broj(podaci.get("bita", 1024), "bita")
-    if bita not in (1024, 2048):
-        raise GreskaZahtjeva("Podržane su dužine 1024 i 2048 bita.")
+    if bita not in rsa.VALID_KEY_SIZES:
+        raise GreskaZahtjeva(
+            "Podržane su dužine %s bita."
+            % ", ".join(str(s) for s in rsa.VALID_KEY_SIZES)
+        )
 
     demo = wiener_rsa.demonstracija(bita)
     ranjivi, normalni = demo["ranjivi"], demo["normalni"]

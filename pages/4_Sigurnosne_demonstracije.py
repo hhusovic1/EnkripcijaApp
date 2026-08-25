@@ -16,6 +16,7 @@ sys.path.insert(0, KORIJEN)
 
 import app_ui  # noqa: E402
 from attacks import mitm_dh, wiener_rsa  # noqa: E402
+from core import rsa  # noqa: E402
 
 st.set_page_config(page_title="Sigurnosne demonstracije", page_icon="🔓",
                    layout="wide")
@@ -25,8 +26,8 @@ app_ui.zaglavlje("pages/4_Sigurnosne_demonstracije.py")
 st.title("🔓 Sigurnosne demonstracije")
 
 tab_mitm, tab_wiener = st.tabs([
-    "MITM na Diffie-Hellman (3.4.4)",
-    "Wienerov napad na RSA (3.3.6)",
+    "MITM na Diffie-Hellman",
+    "Wienerov napad na RSA",
 ])
 
 
@@ -166,8 +167,8 @@ with tab_wiener:
 
     izbor = st.columns([2, 5])
     with izbor[0]:
-        bita = st.selectbox("Dužina ključa", options=[1024, 2048], index=0,
-                            help="2048 traje osjetno duže zbog generisanja ključeva")
+        bita = st.selectbox("Dužina ključa", options=list(rsa.VALID_KEY_SIZES), index=0,
+                            help="Duži ključevi traju osjetno duže zbog generisanja ključeva")
 
     if st.button("Pokreni napad", type="primary", key="wiener_start"):
         with st.spinner("Generisanje ključeva i izvođenje napada…"):
@@ -269,7 +270,7 @@ with tab_wiener:
         })
 
         st.info(
-            "**Zaključak (3.3.6):** ranjivost nije u RSA algoritmu nego u izboru "
+            "**Zaključak:** ranjivost nije u RSA algoritmu nego u izboru "
             "parametara. Zato se `d` uvijek generiše kao vrijednost uporediva po "
             "veličini s `n`, a ubrzanje dekripcije se postiže kineskom teoremom o "
             "ostacima (CRT), a ne malim eksponentom.",

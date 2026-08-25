@@ -1,6 +1,5 @@
 """
-Metapodaci o algoritmima za web sloj - naziv, vrsta, referenca na sekciju rada,
-opis i napomena.
+Metapodaci o algoritmima za web sloj - naziv, vrsta, opis i napomena.
 
 Drzi se odvojeno od ruta jer isti podaci trebaju i sabloni (za padajuci meni) i
 JavaScript (za prikaz opisa pri promjeni izbora) i API (za validaciju).
@@ -15,7 +14,6 @@ def _aes(bita: int) -> dict:
         "naziv": "AES-%d" % bita,
         "vrsta": "blokovni",
         "grupa": "Simetrični — ručna implementacija",
-        "sekcija": "3.2",
         "rucni": True,
         "kljuc_bita": bita,
         "blok": 16,
@@ -27,7 +25,7 @@ def _aes(bita: int) -> dict:
         ),
         "napomena": (
             "S-box se ovdje ne prepisuje kao tabela nego izvodi iz definicije — "
-            "multiplikativni inverz u GF(2⁸) pa afina transformacija (3.2.4)."
+            "multiplikativni inverz u GF(2⁸) pa afina transformacija."
         ),
     }
 
@@ -37,7 +35,6 @@ def _rsa(bita: int) -> dict:
         "naziv": "RSA-%d" % bita,
         "vrsta": "rsa",
         "grupa": "Asimetrični",
-        "sekcija": "3.3",
         "rucni": True,
         "kljuc_bita": bita,
         "opis": (
@@ -47,7 +44,7 @@ def _rsa(bita: int) -> dict:
         ),
         "napomena": (
             "Ovo je udžbenički RSA, bez OAEP dopune — deterministički je, pa ista "
-            "poruka uvijek daje isti šifrat. U praksi se nikad ne koristi ovako (3.3.4)."
+            "poruka uvijek daje isti šifrat. U praksi se nikad ne koristi ovako."
         ),
     }
 
@@ -57,7 +54,6 @@ ALGORITMI = {
         "naziv": "DES",
         "vrsta": "blokovni",
         "grupa": "Simetrični — ručna implementacija",
-        "sekcija": "3.1",
         "rucni": True,
         "kljuc_bita": 56,
         "blok": 8,
@@ -69,14 +65,13 @@ ALGORITMI = {
         "napomena": (
             "56-bitni ključ je danas probojan grubom silom — EFF DES Cracker ga je "
             "razbio za manje od tri dana još 1998. Struktura algoritma je ostala "
-            "solidna; problem je isključivo dužina ključa (3.1.4)."
+            "solidna; problem je isključivo dužina ključa."
         ),
     },
     "3des": {
         "naziv": "3DES",
         "vrsta": "blokovni",
         "grupa": "Simetrični — ručna implementacija",
-        "sekcija": "3.1.5",
         "rucni": True,
         "kljuc_bita": 168,
         "blok": 8,
@@ -98,7 +93,6 @@ ALGORITMI = {
         "naziv": "ChaCha20",
         "vrsta": "tocna",
         "grupa": "Simetrični — biblioteka",
-        "sekcija": "2.3.1",
         "rucni": False,
         "kljuc_bita": 256,
         "opis": (
@@ -120,7 +114,6 @@ ALGORITMI = {
         "naziv": "ECC (ECDH)",
         "vrsta": "ecdh",
         "grupa": "Asimetrični",
-        "sekcija": "3.4.5",
         "rucni": False,
         "kljuc_bita": 256,
         "opis": (

@@ -172,7 +172,7 @@ def encrypt_bytes(plaintext: bytes, public_key: tuple) -> bytes:
         raise ValueError(
             "Poruka ima %d bajtova, a s ovim kljucem (%d bita) moze najvise %d. "
             "Duzi tekst se u praksi salje hibridno: RSA enkriptuje AES kljuc, "
-            "AES enkriptuje sam tekst (vidi 3.5.3)."
+            "AES enkriptuje sam tekst."
             % (len(plaintext), n.bit_length(), limit)
         )
 

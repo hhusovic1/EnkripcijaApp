@@ -9,8 +9,8 @@
 </p>
 
 <div class="tabovi">
-    <button class="aktivan" data-tab="tab-mitm">MITM na Diffie-Hellman (3.4.4)</button>
-    <button data-tab="tab-wiener">Wienerov napad na RSA (3.3.6)</button>
+    <button class="aktivan" data-tab="tab-mitm">MITM na Diffie-Hellman</button>
+    <button data-tab="tab-wiener">Wienerov napad na RSA</button>
 </div>
 
 <!-- ============================== MITM ============================== -->
@@ -140,11 +140,18 @@
                 <select id="izbor-bita" style="width:auto">
                     <option value="1024" selected>1024 bita</option>
                     <option value="2048">2048 bita</option>
+                    <option value="3072">3072 bita</option>
+                    <option value="4096">4096 bita</option>
                 </select>
             </div>
             <button id="dugme-wiener" style="align-self:end">Pokreni napad</button>
             <span class="prigusen" id="status-wiener" style="align-self:end"></span>
         </div>
+        <p class="prigusen" style="margin:.8rem 0 0">
+            Napad je trenutan; vrijeme odlazi na generisanje dva para ključeva
+            tražene dužine. Kod 3072 i 4096 bita to zna potrajati i desetak
+            sekundi, i jako varira između pokretanja.
+        </p>
     </div>
 
     <div id="rezultat-wiener"></div>

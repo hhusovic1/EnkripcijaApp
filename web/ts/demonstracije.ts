@@ -277,7 +277,7 @@ dugmeWiener?.addEventListener('click', async () => {
                 ${par('Rekonstruisani d = pravi d',
                     ranjivi.nadjeni_d === ranjivi.pravi_d ? 'da' : 'ne')}
                 ${poruka('info',
-                    '<strong>Zaključak (3.3.6):</strong> ranjivost nije u RSA algoritmu nego ' +
+                    '<strong>Zaključak:</strong> ranjivost nije u RSA algoritmu nego ' +
                     'u izboru parametara. Zato se <code>d</code> uvijek generiše kao vrijednost ' +
                     'uporediva po veličini s <code>n</code>, a ubrzanje dekripcije se postiže ' +
                     'kineskom teoremom o ostacima (CRT), a ne malim eksponentom.')}

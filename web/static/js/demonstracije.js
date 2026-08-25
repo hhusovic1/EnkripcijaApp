@@ -83,6 +83,6 @@
                 ${a("Poslano",i.poruka)}
                 ${a("Napada\u010D pro\u010Ditao",i.procitano??"\u2014")}
                 ${a("Rekonstruisani d = pravi d",i.nadjeni_d===i.pravi_d?"da":"ne")}
-                ${c("info","<strong>Zaklju\u010Dak (3.3.6):</strong> ranjivost nije u RSA algoritmu nego u izboru parametara. Zato se <code>d</code> uvijek generi\u0161e kao vrijednost uporediva po veli\u010Dini s <code>n</code>, a ubrzanje dekripcije se posti\u017Ee kineskom teoremom o ostacima (CRT), a ne malim eksponentom.")}
+                ${c("info","<strong>Zaklju\u010Dak:</strong> ranjivost nije u RSA algoritmu nego u izboru parametara. Zato se <code>d</code> uvijek generi\u0161e kao vrijednost uporediva po veli\u010Dini s <code>n</code>, a ubrzanje dekripcije se posti\u017Ee kineskom teoremom o ostacima (CRT), a ne malim eksponentom.")}
             </div>
         `}catch(r){e.innerHTML=c("greska",u(g(r)))}finally{o()}});})();

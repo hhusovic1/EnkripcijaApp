@@ -4,7 +4,7 @@ Core algoritmi - interaktivna enkripcija i dekripcija.
 Svaki algoritam se pokrece stvarno, kroz implementacije iz core/. Simetricni
 rade nad tekstom proizvoljne duzine (PKCS#7 dopuna + CBC), RSA nad jednim
 blokom, a ECDH nema sta enkriptovati - kod njega se demonstrira razmjena
-kljuceva i hibridna shema iz 3.5.3.
+kljuceva i hibridna shema.
 """
 import base64
 import hashlib
@@ -32,7 +32,6 @@ LIMIT_RUCNI = 64 * 1024
 ALGORITMI = {
     "DES": {
         "vrsta": "blokovni",
-        "sekcija": "3.1",
         "rucni": True,
         "opis": (
             "Feistelova mreža sa 16 rundi. Blok je 64 bita, ključ 64 bita od kojih "
@@ -43,12 +42,11 @@ ALGORITMI = {
         "napomena": (
             "56-bitni ključ je danas probojan grubom silom — EFF DES Cracker ga je "
             "razbio za manje od tri dana još 1998. Struktura algoritma je ostala "
-            "solidna; problem je isključivo dužina ključa (3.1.4)."
+            "solidna; problem je isključivo dužina ključa."
         ),
     },
     "3DES": {
         "vrsta": "blokovni",
-        "sekcija": "3.1.5",
         "rucni": True,
         "opis": (
             "EDE shema: C = E_k3(D_k2(E_k1(P))). Srednji korak je dekripcija, što "
@@ -61,12 +59,11 @@ ALGORITMI = {
             "bloka i napada Sweet32."
         ),
     },
-    "AES-128": {"vrsta": "blokovni", "sekcija": "3.2", "rucni": True, "kljuc_bita": 128},
-    "AES-192": {"vrsta": "blokovni", "sekcija": "3.2", "rucni": True, "kljuc_bita": 192},
-    "AES-256": {"vrsta": "blokovni", "sekcija": "3.2", "rucni": True, "kljuc_bita": 256},
+    "AES-128": {"vrsta": "blokovni", "rucni": True, "kljuc_bita": 128},
+    "AES-192": {"vrsta": "blokovni", "rucni": True, "kljuc_bita": 192},
+    "AES-256": {"vrsta": "blokovni", "rucni": True, "kljuc_bita": 256},
     "ChaCha20": {
         "vrsta": "tocna",
-        "sekcija": "2.3.1",
         "rucni": False,
         "opis": (
             "Tokovna (stream) šifra — generiše pseudoslučajan tok ključa koji se "
@@ -79,13 +76,12 @@ ALGORITMI = {
             "XOR dva otvorena teksta."
         ),
     },
-    "RSA-1024": {"vrsta": "rsa", "sekcija": "3.3", "rucni": True, "kljuc_bita": 1024},
-    "RSA-2048": {"vrsta": "rsa", "sekcija": "3.3", "rucni": True, "kljuc_bita": 2048},
-    "RSA-3072": {"vrsta": "rsa", "sekcija": "3.3", "rucni": True, "kljuc_bita": 3072},
-    "RSA-4096": {"vrsta": "rsa", "sekcija": "3.3", "rucni": True, "kljuc_bita": 4096},
+    "RSA-1024": {"vrsta": "rsa", "rucni": True, "kljuc_bita": 1024},
+    "RSA-2048": {"vrsta": "rsa", "rucni": True, "kljuc_bita": 2048},
+    "RSA-3072": {"vrsta": "rsa", "rucni": True, "kljuc_bita": 3072},
+    "RSA-4096": {"vrsta": "rsa", "rucni": True, "kljuc_bita": 4096},
     "ECC (ECDH)": {
         "vrsta": "ecdh",
-        "sekcija": "3.4.5",
         "rucni": False,
         "opis": (
             "ECDH ne enkriptuje ništa — to je protokol za uspostavu zajedničke "
@@ -111,7 +107,7 @@ for naziv, meta in ALGORITMI.items():
         )
         meta["napomena"] = (
             "S-box se ovdje ne prepisuje kao tabela nego **izvodi iz definicije** — "
-            "multiplikativni inverz u GF(2⁸) pa afina transformacija (3.2.4)."
+            "multiplikativni inverz u GF(2⁸) pa afina transformacija."
         )
     elif naziv.startswith("RSA"):
         meta["opis"] = (
@@ -122,7 +118,7 @@ for naziv, meta in ALGORITMI.items():
         meta["napomena"] = (
             "Ovo je **udžbenički RSA, bez OAEP dopune** — deterministički je, pa "
             "ista poruka uvijek daje isti šifrat. U praksi se nikad ne koristi "
-            "ovako (3.3.4)."
+            "ovako."
         )
 
 izbor = st.columns([2, 5])
@@ -132,10 +128,7 @@ meta = ALGORITMI[naziv]
 
 with izbor[1]:
     vrsta_implementacije = "ručna implementacija" if meta["rucni"] else "biblioteka"
-    st.markdown(
-        "&nbsp;\n\n**%s** · %s · rad, sekcija **%s**"
-        % (naziv, vrsta_implementacije, meta["sekcija"])
-    )
+    st.markdown("&nbsp;\n\n**%s** · %s" % (naziv, vrsta_implementacije))
 
 st.write(meta["opis"])
 with st.expander("Na šta paziti"):
@@ -329,7 +322,7 @@ elif meta["vrsta"] == "rsa":
         st.error(
             "Privatni eksponent se u praksi **nikad ne prikazuje niti prenosi**. "
             "Ovdje je vidljiv samo zato što je ovo demonstracija. Isto vrijedi za "
-            "p, q i φ(n) — oni se nakon generisanja ključa uništavaju (3.3.3).",
+            "p, q i φ(n) — oni se nakon generisanja ključa uništavaju.",
             icon="⚠️",
         )
         with st.expander("Prikaži p, q i φ(n)"):
@@ -352,8 +345,8 @@ elif meta["vrsta"] == "rsa":
         st.error(
             "Poruka ima %d bajtova, a s %d-bitnim ključem RSA može enkriptovati "
             "najviše %d. RSA obrađuje samo brojeve manje od modula n — zato se u "
-            "praksi koristi hibridno: RSA štiti AES ključ, AES štiti sadržaj "
-            "(3.5.3)." % (len(podaci), bita, limit),
+            "praksi koristi hibridno: RSA štiti AES ključ, AES štiti sadržaj."
+            % (len(podaci), bita, limit),
             icon="🔴",
         )
         st.stop()
@@ -385,7 +378,7 @@ elif meta["vrsta"] == "rsa":
 
         st.caption(
             "Dekripcija je znatno sporija jer je e = 65537 broj sa samo dva "
-            "postavljena bita, dok je d pune dužine modula (3.3.3)."
+            "postavljena bita, dok je d pune dužine modula."
         )
         st.code(hex_prikaz(r["sifrat"]), language=None)
 
@@ -442,7 +435,7 @@ elif meta["vrsta"] == "ecdh":
         st.error("Tajne se ne poklapaju.", icon="🔴")
 
     st.divider()
-    st.subheader("3. Hibridna primjena (3.5.3)")
+    st.subheader("3. Hibridna primjena")
     st.markdown(
         "Sama tajna se nikad ne koristi direktno kao ključ — propušta se kroz hash "
         "funkciju. Ovdje se iz nje izvodi AES-128 ključ kojim se šifruje tekst, što "

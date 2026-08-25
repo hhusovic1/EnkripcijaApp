@@ -29,7 +29,6 @@ export interface MetaAlgoritma {
     naziv: string;
     vrsta: 'blokovni' | 'tocna' | 'rsa' | 'ecdh';
     grupa: string;
-    sekcija: string;
     rucni: boolean;
     kljuc_bita: number;
     blok?: number;
