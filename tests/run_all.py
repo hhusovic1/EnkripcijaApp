@@ -12,6 +12,7 @@ sys.path.insert(0, os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 
 import test_aes  # noqa: E402
+import test_api  # noqa: E402
 import test_des  # noqa: E402
 import test_mitm  # noqa: E402
 import test_modes  # noqa: E402
@@ -29,6 +30,7 @@ MODULI = [
     ("Wienerov napad na RSA", test_wiener),
     ("Grafovi", test_plot),
     ("Streamlit stranice", test_stranice),
+    ("Flask API", test_api),
 ]
 
 

@@ -1,6 +1,17 @@
+# Kriptografija
 pycryptodome>=3.20
 cryptography>=42.0
 sympy>=1.12
+
+# Benchmark i grafovi za rad
 pandas>=2.0
 matplotlib>=3.8
+
+# Web aplikacija
+flask>=3.0
+reportlab>=4.0  # PDF izvjestaj s rezultatima mjerenja
+gunicorn>=21.2
+
+# Streamlit verzija aplikacije - zadrzana dok Flask ne preuzme sve;
+# ako se ukloni, obrisati i app.py, app_ui.py, pages/ i tests/test_stranice.py
 streamlit>=1.30

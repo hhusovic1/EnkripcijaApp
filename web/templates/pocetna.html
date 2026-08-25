@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block naslov %}EncryptionApp{% endblock %}
+
+{% block sadrzaj %}
+<h1 class="naslov-hero">Encryption<span>App</span></h1>
+<p class="podnaslov">
+    Demonstraciona aplikacija uz završni rad prvog ciklusa studija —
+    šest algoritama, izmjerene performanse i sigurnosne demonstracije.
+</p>
+
+<div class="panel">
+    <p style="margin-top:0">
+        Rad analizira enkripcijske algoritme teorijski; ova aplikacija ih pokazuje
+        na djelu, s <strong>izmjerenim</strong> performansama umjesto brojeva
+        preuzetih iz literature.
+    </p>
+    <p style="margin-bottom:0">
+        DES, 3DES, AES i RSA su <strong>implementirani ručno</strong>, u čistom
+        Pythonu, prema opisu iz poglavlja 3 — bez kriptografskih biblioteka, i
+        validirani protiv zvaničnih test vektora (FIPS 46-3, FIPS-197). ECDH i
+        ChaCha20 idu kroz provjerene biblioteke.
+    </p>
+</div>
+
+<div class="mreza mreza-3">
+    {% for stat in statistike %}
+    <div class="statistika">
+        <div class="broj">{{ stat.broj }}</div>
+        <div class="oznaka">{{ stat.oznaka }}</div>
+        <div class="detalj">{{ stat.detalj }}</div>
+    </div>
+    {% endfor %}
+</div>
+
+<h2>Sadržaj</h2>
+
+<div class="mreza mreza-3">
+    {% for kartica in kartice %}
+    <a class="kartica" href="{{ url_for(kartica.putanja) }}">
+        <div class="ikona">{{ kartica.ikona }}</div>
+        <h3>{{ kartica.naslov }}</h3>
+        <p>{{ kartica.opis }}</p>
+    </a>
+    {% endfor %}
+</div>
+
+<h2>Kako je validirano</h2>
+<div class="panel">
+    <div class="par">
+        <span class="kljuc">Zvanični test vektori</span>
+        <span class="vrijednost">FIPS 46-3 / NBS SP 500-20 (DES), FIPS-197 Appendix A/B/C (AES)</span>
+    </div>
+    <div class="par">
+        <span class="kljuc">Unakrsna provjera</span>
+        <span class="vrijednost">isti ulaz kroz pycryptodome, stotine nasumičnih ključeva i blokova</span>
+    </div>
+    <div class="par">
+        <span class="kljuc">AES S-box</span>
+        <span class="vrijednost">izveden iz definicije (inverz u GF(2⁸) + afina transformacija), ne prepisan</span>
+    </div>
+    <div class="par">
+        <span class="kljuc">Pokretanje</span>
+        <span class="vrijednost">python tests/run_all.py</span>
+    </div>
+</div>
+{% endblock %}

@@ -108,6 +108,25 @@ def test_mallory_moze_izmijeniti_poruku():
     assert bob.desifruj(podmetnuto) == "posalji novac na drugi racun"
 
 
+def test_korak_izmjene_radi_sa_bilo_kojom_porukom():
+    """
+    Regresija: korak koji pokazuje izmjenu poruke je ranije radio str.replace
+    konkretnog broja racuna, pa s korisnickom porukom nije mijenjao nista i
+    demonstracija je gubila smisao.
+    """
+    for poruka in ("test poruka", "bilo sta", mitm_dh.PORUKA):
+        rezultat = mitm_dh.sa_mallory(poruka=poruka)
+        korak = rezultat["koraci"][-1]
+        assert "mijenjati" in korak["naslov"]
+
+        poslala = korak["vrijednosti"]["Alice je poslala"]
+        primio = korak["vrijednosti"]["Bob je primio"]
+        assert poslala == poruka
+        assert primio != poslala, (
+            "s porukom %r Bob je primio isti tekst - izmjena se ne vidi" % poruka
+        )
+
+
 def test_mallory_ne_zna_tajne_eksponente():
     """
     Kljucna poenta 3.4.4: napad ne razbija diskretni logaritam. Mallory nema

@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% block naslov %}Benchmark · EncryptionApp{% endblock %}
+
+{% block sadrzaj %}
+<h1>Benchmark</h1>
+<p class="podnaslov">
+    Stvarna izmjerena vremena, ne brojevi preuzeti iz literature. Svaka tačka je
+    prosjek više ponavljanja; error bar je standardna devijacija.
+</p>
+
+{% if not ima_rezultate %}
+<div class="poruka greska">
+    Nema <code>benchmark/results.csv</code>. Pokreni:
+    <pre class="izlaz" style="margin-top:.5rem">python benchmark/run_benchmark.py</pre>
+</div>
+{% else %}
+
+<div class="poruka upozorenje">
+    <strong>Kako čitati ove brojeve.</strong>
+    DES, 3DES, AES i RSA su ručne implementacije u čistom Pythonu, pisane radi
+    čitljivosti i podudaranja s opisom u radu — ne radi brzine. ChaCha20, ECDH i
+    varijante označene <em>(biblioteka)</em> izvršavaju se kroz optimizovani C kod.
+    Razlika među tim grupama mjeri <strong>implementaciju</strong>, ne samo
+    algoritam. Poređenja unutar iste grupe su ono što nosi zaključak.
+</div>
+
+<div class="panel">
+    <div class="panel-naslov">Prikazani algoritmi</div>
+    <div class="red-dugmadi" style="margin-bottom:.8rem">
+        <button class="sekundarno" id="dugme-svi">Svi</button>
+        <button class="sekundarno" id="dugme-nijedan">Nijedan</button>
+    </div>
+    <div class="checkbox-lista" id="lista-algoritama">
+        {% for grupa, stavke in algoritmi_po_kategoriji.items() %}
+        <div class="grupa-naslov">{{ grupa }}</div>
+        {% for a in stavke %}
+        <label>
+            <input type="checkbox" value="{{ a }}" checked
+                   style="accent-color: {{ boje[a] }}">
+            {{ a }}
+        </label>
+        {% endfor %}
+        {% endfor %}
+    </div>
+</div>
+
+<div class="tabovi">
+    <button class="aktivan" data-tab="tab-velicina">Vrijeme vs veličina podataka</button>
+    <button data-tab="tab-kljuc">Generisanje ključa</button>
+    <button data-tab="tab-poredjenje">Direktno poređenje</button>
+</div>
+
+<div id="tab-velicina" class="tab-sadrzaj aktivan">
+    <p class="prigusen">
+        Obje ose su logaritamske — raspon između ručnog 3DES-a i ChaCha20 prelazi
+        četiri reda veličine, pa bi na linearnoj skali sve osim najsporijeg
+        algoritma bilo spljošteno uz nulu.
+    </p>
+    <div class="mreza mreza-2">
+        <div class="panel">
+            <div class="panel-naslov">Enkripcija</div>
+            <div class="graf-omot"><canvas id="graf-enkripcija"></canvas></div>
+        </div>
+        <div class="panel">
+            <div class="panel-naslov">Dekripcija</div>
+            <div class="graf-omot"><canvas id="graf-dekripcija"></canvas></div>
+        </div>
+    </div>
+
+    <details class="panel">
+        <summary style="cursor:pointer;font-weight:600">
+            Zašto RSA ima samo jednu tačku, a ostali imaju liniju?
+        </summary>
+        <div style="margin-top:.9rem">
+            <p>
+                DES, AES i ChaCha20 obrađuju <strong>ulaz proizvoljne dužine</strong> —
+                dijele ga na blokove i vrte petlju. Zato se mogu izmjeriti na više
+                veličina i dobiješ liniju.
+            </p>
+            <p>
+                RSA nije petlja. To je <strong>jedna matematička operacija</strong> nad
+                jednim brojem: <code>c = m^e mod n</code>. Poruka <code>m</code> mora
+                biti manja od modula <code>n</code>, pa dužina ključa određuje jedinu
+                moguću veličinu ulaza:
+            </p>
+            <div class="tabela-omot">
+                <table>
+                    <thead><tr><th>Ključ</th><th>Najveća poruka</th></tr></thead>
+                    <tbody>
+                        <tr><td>RSA-1024</td><td class="broj">126 B</td></tr>
+                        <tr><td>RSA-2048</td><td class="broj">254 B</td></tr>
+                        <tr><td>RSA-3072</td><td class="broj">382 B</td></tr>
+                        <tr><td>RSA-4096</td><td class="broj">510 B</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <h3>Gdje graf vara</h3>
+            <p>
+                Tačke za enkripciju leže nisko, što izgleda kao da je RSA brz. Nije —
+                obradio je 126–510 bajtova, dok su ostali obradili do 64 KB. Po bajtu
+                se slika okreće: RSA-4096 dekriptuje <strong>3.8 KB/s</strong>, a ručni
+                AES-128 <strong>24.3 KB/s</strong> — dakle 6× sporije, i to dok RSA
+                koristi ugrađeni <code>pow()</code> pisan u C-u.
+            </p>
+            <p style="margin-bottom:0">
+                Zato se RSA nikad ne koristi za enkripciju samih podataka, nego samo za
+                zaštitu simetričnog ključa — hibridni kriptosistem iz <strong>3.5.3</strong>.
+            </p>
+        </div>
+    </details>
+</div>
+
+<div id="tab-kljuc" class="tab-sadrzaj">
+    <p class="prigusen">
+        Kod simetričnih algoritama generisanje ključa je samo čitanje slučajnih
+        bajtova. Kod RSA znači traženje dva velika prosta broja, pa vrijeme raste
+        naglo s dužinom ključa — i jako varira između pokretanja.
+    </p>
+    <div class="mreza mreza-2">
+        <div class="panel">
+            <div class="panel-naslov">RSA — generisanje para ključeva</div>
+            <div class="graf-omot nizak"><canvas id="graf-rsa-keygen"></canvas></div>
+        </div>
+        <div class="panel">
+            <div class="panel-naslov">Ostali algoritmi</div>
+            <div class="graf-omot nizak"><canvas id="graf-ostali-keygen"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<div id="tab-poredjenje" class="tab-sadrzaj">
+    <div class="panel">
+        <label for="izbor-velicine">Veličina podataka za poređenje</label>
+        <select id="izbor-velicine" style="max-width:16rem">
+            {% for v in dostupne_velicine %}
+            <option value="{{ v }}" {{ 'selected' if v == poredbena_velicina }}>{{ v }} B</option>
+            {% endfor %}
+        </select>
+        <div class="graf-omot" style="margin-top:1rem"><canvas id="graf-poredjenje"></canvas></div>
+        <p class="prigusen" style="margin-bottom:0">
+            RSA ne može obraditi izabranu veličinu — za njega se uzima njegov jedini
+            blok, što je označeno uz naziv.
+        </p>
+    </div>
+</div>
+
+<h2>Sirovi brojevi</h2>
+<div class="panel">
+    <div class="filteri">
+        <div class="filter">
+            <label for="filter-algoritma">Algoritam</label>
+            <select id="filter-algoritma">
+                <option value="">Svi algoritmi</option>
+                {% for naziv, algoritmi in algoritmi_po_kategoriji.items() %}
+                <optgroup label="{{ naziv }}">
+                    {% for a in algoritmi %}
+                    <option value="{{ a }}">{{ a }}</option>
+                    {% endfor %}
+                </optgroup>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter">
+            <label for="filter-operacije">Operacija</label>
+            <select id="filter-operacije">
+                <option value="">Sve operacije</option>
+                {% for o in operacije %}
+                <option value="{{ o.vrijednost }}">{{ o.oznaka }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-akcije">
+            <button class="sekundarno skriven" type="button" id="dugme-ponisti">Poništi filtere</button>
+            <a class="veza-dugme" href="{{ url_for('glavni.preuzmi_pdf') }}">
+                <button type="button">Preuzmi PDF</button>
+            </a>
+        </div>
+    </div>
+    <div class="tabela-omot tabela-skrol">
+        <table id="tabela-rezultata">
+            <thead>
+                <tr>
+                    <th>Algoritam</th><th>Operacija</th><th>Veličina</th>
+                    <th>Ključ</th><th>Srednje vrijeme</th><th>Std. dev.</th>
+                    <th>Ponavljanja</th><th>Propusnost</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+    <p class="prigusen" id="sazetak-tabele" style="margin-bottom:0"></p>
+    <p class="prigusen" style="margin:.2rem 0 0">
+        PDF sadrži sva mjerenja, grupisana po algoritmu — filteri iznad mijenjaju
+        samo prikaz na stranici.
+    </p>
+</div>
+
+{% endif %}
+{% endblock %}
+
+{% block skripte %}
+{% if ima_rezultate %}
+<script>
+    window.MJERENJA = {{ mjerenja_json | safe }};
+    window.BOJE = {{ boje_json | safe }};
+    window.POREDBENA_VELICINA = {{ poredbena_velicina }};
+    window.NAZIVI_OPERACIJA = {{ nazivi_operacija_json | safe }};
+</script>
+<script src="{{ url_for('static', filename='js/benchmark.js') }}"></script>
+{% endif %}
+{% endblock %}
