@@ -62,8 +62,11 @@ izborGrupe.addEventListener('change', opisGrupe);
 opisGrupe();
 
 function karticaKoraka(korak: KorakMitm): string {
+    // Akter je slobodan tekst iz Pythona ("Mallory -> Bob", "Alice i Bob"...);
+    // dovoljno je da se Mallory spominje da korak dobije boju napadaca.
+    const napadacev = korak.akter.includes('Mallory');
     return `
-        <div class="korak ${korak.istaknuto ? 'istaknut' : ''}">
+        <div class="korak ${korak.istaknuto ? 'istaknut' : ''} ${napadacev ? 'napadac' : ''}">
             <div class="korak-naslov">
                 <span class="korak-oznaka">Korak ${korak.broj}</span>
                 ${escapeHtml(korak.naslov)}
@@ -83,7 +86,7 @@ function nacrtajKorake(): void {
     // ono sto se upravo desilo zavrsi ispod ekrana.
     el('koraci-mitm').innerHTML = pregledSvih
         ? `<div class="pregled-naslov">Cijela razmjena — svih ${ukupno} koraka</div>`
-          + mitm.koraci.map(karticaKoraka).join('')
+          + `<div class="vremenska-linija">${mitm.koraci.map(karticaKoraka).join('')}</div>`
         : karticaKoraka(mitm.koraci[korakBroj - 1]);
 
     const traka = el('traka-mitm');
@@ -264,7 +267,9 @@ dugmeWiener?.addEventListener('click', async () => {
                 isprobava i za svaku provjerava daje li smislen <code>φ</code> — onaj kod
                 kojeg <code>x² − (n − φ + 1)x + n = 0</code> ima dva cjelobrojna rješenja.
             </p>
-            ${ranjivi.koraci.map(korakWiener).join('')}
+            <div class="vremenska-linija">
+                ${ranjivi.koraci.map(korakWiener).join('')}
+            </div>
 
             <h2>Posljedica</h2>
             <div class="panel">

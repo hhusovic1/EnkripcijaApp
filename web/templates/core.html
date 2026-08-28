@@ -31,7 +31,7 @@
 
 <!-- ===================== Simetrični i ChaCha20 ===================== -->
 <section id="sekcija-simetricni" class="skriven">
-    <h2>1. Ključ</h2>
+    <h2 class="naslov-koraka" data-broj="1" id="korak-sim-1">Ključ</h2>
     <div class="panel">
         <div class="red-dugmadi">
             <button id="dugme-kljuc">Generiši ključ</button>
@@ -40,14 +40,14 @@
         <div id="prikaz-kljuca" style="margin-top:.9rem"></div>
     </div>
 
-    <h2>2. Otvoreni tekst</h2>
+    <h2 class="naslov-koraka" data-broj="2" id="korak-sim-2">Otvoreni tekst</h2>
     <div class="panel">
         <label for="unos-teksta">Tekst proizvoljne dužine</label>
         <textarea id="unos-teksta">Ovo je tajna poruka koju šifrujemo ručno implementiranim algoritmom.</textarea>
         <div class="prigusen" id="info-dopune" style="margin-top:.5rem"></div>
     </div>
 
-    <h2>3. Enkripcija i dekripcija</h2>
+    <h2 class="naslov-koraka" data-broj="3" id="korak-sim-3">Enkripcija i dekripcija</h2>
     <div class="panel">
         <div class="red-dugmadi">
             <button id="dugme-sifruj" disabled>Enkriptuj i dekriptuj</button>
@@ -64,7 +64,7 @@
 
 <!-- ============================== RSA ============================== -->
 <section id="sekcija-rsa" class="skriven">
-    <h2>1. Par ključeva</h2>
+    <h2 class="naslov-koraka" data-broj="1" id="korak-rsa-1">Par ključeva</h2>
     <div class="panel">
         <div class="red-dugmadi">
             <button id="dugme-rsa-kljuc">Generiši par ključeva</button>
@@ -73,14 +73,14 @@
         <div id="prikaz-rsa-kljuca" style="margin-top:.9rem"></div>
     </div>
 
-    <h2>2. Poruka</h2>
+    <h2 class="naslov-koraka" data-broj="2" id="korak-rsa-2">Poruka</h2>
     <div class="panel">
         <label for="unos-rsa">Poruka</label>
         <textarea id="unos-rsa" style="min-height:4.5rem">Tajna poruka.</textarea>
         <div class="prigusen" id="info-rsa-limit" style="margin-top:.5rem"></div>
     </div>
 
-    <h2>3. Enkripcija javnim, dekripcija privatnim</h2>
+    <h2 class="naslov-koraka" data-broj="3" id="korak-rsa-3">Enkripcija javnim, dekripcija privatnim</h2>
     <div class="panel">
         <button id="dugme-rsa-sifruj" disabled>Enkriptuj i dekriptuj</button>
         <div id="rezultat-rsa"></div>
@@ -89,13 +89,13 @@
 
 <!-- ============================= ECDH ============================== -->
 <section id="sekcija-ecdh" class="skriven">
-    <h2>1. Obje strane generišu par ključeva</h2>
+    <h2 class="naslov-koraka" data-broj="1" id="korak-ecdh-1">Obje strane generišu par ključeva</h2>
     <div class="panel">
         <button id="dugme-ecdh">Pokreni razmjenu</button>
         <div id="rezultat-ecdh" style="margin-top:.9rem"></div>
     </div>
 
-    <h2>2. Hibridna primjena</h2>
+    <h2 class="naslov-koraka" data-broj="2" id="korak-ecdh-2">Hibridna primjena</h2>
     <div class="panel">
         <p style="margin-top:0" class="prigusen">
             Sama tajna se nikad ne koristi direktno kao ključ — propušta se kroz hash
