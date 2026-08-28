@@ -34,6 +34,21 @@ function meta(): MetaAlgoritma {
     return ALGORITMI[izborAlgoritma.value];
 }
 
+/**
+ * Naslovi koraka na stranici nose broj; kad je korak stvarno odradjen, broj
+ * postaje kvacica. Cisto vizuelno stanje — nista ne zavisi od njega, pa naslov
+ * koji ne postoji (druga sekcija je skrivena) jednostavno prolazi bez efekta.
+ */
+function oznaciKorak(id: string, gotov = true): void {
+    mozdaEl(id)?.classList.toggle('gotov', gotov);
+}
+
+const SVI_KORACI = [
+    'korak-sim-1', 'korak-sim-2', 'korak-sim-3',
+    'korak-rsa-1', 'korak-rsa-2', 'korak-rsa-3',
+    'korak-ecdh-1', 'korak-ecdh-2',
+];
+
 // ---------------------------------------------------------------- Izbor algoritma
 
 function prikaziAlgoritam(): void {
@@ -69,6 +84,7 @@ function prikaziAlgoritam(): void {
     if (status) status.textContent = 'Ključ još nije generisan.';
     const dugme = mozdaEl<HTMLButtonElement>('dugme-sifruj');
     if (dugme) dugme.disabled = true;
+    SVI_KORACI.forEach((id) => oznaciKorak(id, false));
 
     osvjeziInfoDopune();
 }
@@ -122,6 +138,7 @@ el<HTMLButtonElement>('dugme-kljuc').addEventListener('click', async (dogadjaj) 
         el('prikaz-kljuca').innerHTML = parovi(redovi);
         el('status-kljuca').textContent = '';
         el<HTMLButtonElement>('dugme-sifruj').disabled = false;
+        oznaciKorak('korak-sim-1');
     } catch (greska) {
         el('prikaz-kljuca').innerHTML = poruka('greska', escapeHtml(tekstGreske(greska)));
     } finally {
@@ -171,6 +188,8 @@ el<HTMLButtonElement>('dugme-sifruj').addEventListener('click', async (dogadjaj)
             <pre class="izlaz">${escapeHtml(r.vraceno)}</pre>
         `;
         prikaziSifrat();
+        oznaciKorak('korak-sim-2');
+        oznaciKorak('korak-sim-3');
     } catch (greska) {
         cilj.innerHTML = poruka('greska', escapeHtml(tekstGreske(greska)));
     } finally {
@@ -235,6 +254,7 @@ mozdaEl<HTMLButtonElement>('dugme-rsa-kljuc')?.addEventListener('click', async (
         `;
         el('status-rsa').textContent = '';
         el<HTMLButtonElement>('dugme-rsa-sifruj').disabled = false;
+        oznaciKorak('korak-rsa-1');
         osvjeziRsaLimit();
     } catch (greska) {
         el('prikaz-rsa-kljuca').innerHTML = poruka('greska', escapeHtml(tekstGreske(greska)));
@@ -275,6 +295,8 @@ mozdaEl<HTMLButtonElement>('dugme-rsa-sifruj')?.addEventListener('click', async 
                 : poruka('greska', 'Poruka se ne poklapa.')}
             <pre class="izlaz">${escapeHtml(r.vraceno)}</pre>
         `;
+        oznaciKorak('korak-rsa-2');
+        oznaciKorak('korak-rsa-3');
     } catch (greska) {
         cilj.innerHTML = poruka('greska', escapeHtml(tekstGreske(greska)));
     } finally {
@@ -313,6 +335,7 @@ mozdaEl<HTMLButtonElement>('dugme-ecdh')?.addEventListener('click', async (dogad
                 : poruka('greska', 'Tajne se ne poklapaju.')}
         `;
         el<HTMLButtonElement>('dugme-ecdh-sifruj').disabled = false;
+        oznaciKorak('korak-ecdh-1');
     } catch (greska) {
         cilj.innerHTML = poruka('greska', escapeHtml(tekstGreske(greska)));
     } finally {
@@ -342,6 +365,7 @@ mozdaEl<HTMLButtonElement>('dugme-ecdh-sifruj')?.addEventListener('click', async
                     'nije morala unaprijed dijeliti tajnu.')
                 : poruka('greska', 'Dešifrovanje nije uspjelo.')}
         `;
+        oznaciKorak('korak-ecdh-2');
     } catch (greska) {
         cilj.innerHTML = poruka('greska', escapeHtml(tekstGreske(greska)));
     } finally {

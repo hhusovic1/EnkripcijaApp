@@ -86,10 +86,30 @@ const pluginGresaka: Plugin = {
 
 Chart.register(pluginGresaka);
 
-Chart.defaults.color = '#98a1b3';
-Chart.defaults.borderColor = 'rgba(42, 47, 58, .7)';
+/*
+ * Tema grafova. Chart.js podrazumijevano crta za svijetlu pozadinu, pa bez
+ * ovoga na tamnoj temi ostane siva mreža i bijeli tooltip. Vrijednosti prate
+ * iste boje kao style.css (--tekst-prigusen, --ivica, --panel).
+ */
+Chart.defaults.color = '#9aa4b8';
+Chart.defaults.borderColor = 'rgba(38, 44, 57, .75)';
 Chart.defaults.font.family = "-apple-system, 'Segoe UI', Roboto, sans-serif";
+Chart.defaults.font.size = 12;
 Chart.defaults.maintainAspectRatio = false;
+
+Chart.defaults.plugins.legend.labels.usePointStyle = true;
+Chart.defaults.plugins.legend.labels.boxWidth = 8;
+Chart.defaults.plugins.legend.labels.padding = 14;
+
+Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(16, 20, 28, .97)';
+Chart.defaults.plugins.tooltip.borderColor = '#343d4e';
+Chart.defaults.plugins.tooltip.borderWidth = 1;
+Chart.defaults.plugins.tooltip.titleColor = '#e8ecf3';
+Chart.defaults.plugins.tooltip.bodyColor = '#cdd6e5';
+Chart.defaults.plugins.tooltip.padding = 10;
+Chart.defaults.plugins.tooltip.cornerRadius = 8;
+Chart.defaults.plugins.tooltip.usePointStyle = true;
+Chart.defaults.plugins.tooltip.boxPadding = 5;
 
 // ------------------------------------------------------------------ Izbor
 
@@ -161,8 +181,16 @@ function nacrtaj<TVrsta extends ChartType>(
 
 const logOsa = (naslov: string, formater: (v: number) => string) => ({
     type: 'logarithmic' as const,
-    title: { display: true, text: naslov },
+    title: {
+        display: true,
+        text: naslov,
+        color: '#9aa4b8',
+        font: { size: 11, weight: 500 as const },
+    },
+    grid: { color: 'rgba(38, 44, 57, .5)', tickColor: 'transparent' },
+    border: { color: 'rgba(52, 61, 78, .8)' },
     ticks: {
+        padding: 6,
         callback: (vrijednost: string | number) => {
             const broj = Number(vrijednost);
             // Na log skali Chart.js nudi i međupodioke; označavaju se samo dekade
@@ -201,7 +229,10 @@ function serijeZaOperaciju(operacija: string, izabrani: Set<string>): ChartDatas
                 backgroundColor: boja(algoritam),
                 showLine: !jednaTacka,
                 pointStyle: jednaTacka ? 'rectRot' : 'circle',
-                pointRadius: jednaTacka ? 7 : 4,
+                pointRadius: jednaTacka ? 7 : 3.5,
+                pointHoverRadius: jednaTacka ? 9 : 6,
+                pointBorderColor: '#0e1117',
+                pointBorderWidth: 1.5,
                 borderWidth: 2,
                 tension: 0,
             } as unknown as ChartDataset<'line'>;
@@ -300,6 +331,8 @@ function grafGenerisanjaKljuca(izabrani: Set<string>): void {
                 label: 'Generisanje ključa',
                 data: ostali.map((m) => m.srednje_vrijeme_s),
                 backgroundColor: ostali.map((m) => boja(m.algoritam)),
+                borderRadius: 4,
+                borderSkipped: false,
             }],
         },
         options: {
@@ -351,6 +384,8 @@ function grafPoredjenja(izabrani: Set<string>, velicina: number): void {
                 label: `Vrijeme enkripcije pri ${formatirajBajtove(velicina)}`,
                 data: redovi.map((m) => m.srednje_vrijeme_s),
                 backgroundColor: redovi.map((m) => boja(m.algoritam)),
+                borderRadius: 4,
+                borderSkipped: false,
             }],
         },
         options: {
