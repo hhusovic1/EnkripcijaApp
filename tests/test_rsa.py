@@ -1,13 +1,4 @@
-"""
-Validacija RSA implementacije iz core/rsa.py.
 
-Kod RSA nema fiksnih test vektora kao kod DES-a i AES-a (kljucevi su nasumicni),
-pa se provjeravaju matematicka svojstva: da je n proizvod dva prosta broja tacne
-duzine, da je d inverz od e po modulu phi, da je dekripcija inverz enkripcije,
-i da Wienerov napad uspijeva tacno tamo gdje teorija kaze da treba.
-
-Pokreni: python tests/test_rsa.py
-"""
 import os
 import sys
 import time
@@ -154,11 +145,6 @@ def test_generisanje_2048():
 
 
 def test_granica_prostih_brojeva_za_sve_duzine():
-    """
-    Regresija: donja granica se ranije racunala mnozenjem s float konstantom,
-    sto je za kljuceve od 3072 bita naviše prelazilo opseg tipa float
-    (OverflowError). Provjerava se cjelobrojni racun za sve podrzane duzine.
-    """
     for bits in rsa.VALID_KEY_SIZES:
         half = bits // 2
         prost = rsa._random_prime(half)
@@ -173,7 +159,7 @@ def test_granica_prostih_brojeva_za_sve_duzine():
 
 
 def test_generisanje_svih_duzina_kljuca():
-    """Sve duzine iz benchmarka moraju proci cijeli ciklus, ne samo keygen."""
+
     for bits in rsa.VALID_KEY_SIZES:
         keys = rsa.generate_keys(bits)
         assert keys["public"][0].bit_length() == bits

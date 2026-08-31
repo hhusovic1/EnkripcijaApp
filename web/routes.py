@@ -8,7 +8,7 @@ import json
 import os
 
 import pandas as pd
-from flask import Blueprint, abort, render_template, send_file
+from flask import Blueprint, abort, render_template, request, send_file
 
 KORIJEN = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RESULTS_CSV = os.path.join(KORIJEN, "benchmark", "results.csv")
@@ -183,17 +183,45 @@ def preuzmi_csv():
     return send_file(RESULTS_CSV, as_attachment=True, download_name="results.csv")
 
 
+def _lista_iz_upita(naziv: str) -> list:
+    """Vrijednosti razdvojene zarezom iz query stringa; prazno = bez filtera."""
+    sirovo = request.args.get(naziv, "").strip()
+    return [dio.strip() for dio in sirovo.split(",") if dio.strip()] if sirovo else []
+
+
 @glavni.route("/benchmark/rezultati.pdf")
 def preuzmi_pdf():
-    """Ista tabela kao na stranici, ali za štampu — sva mjerenja, po algoritmu."""
+    """
+    Ista tabela kao na stranici, ali za štampu.
+
+    Bez parametara izvozi sva mjerenja. Uz `?algoritmi=DES,3DES&operacije=dekripcija`
+    izvozi samo taj izbor — isto ono što tabela na stranici tada prikazuje.
+    """
     if not os.path.exists(RESULTS_CSV):
         abort(404)
 
     from .izvjestaj import napravi_pdf
 
     df = pd.read_csv(RESULTS_CSV)
+
+    algoritmi = _lista_iz_upita("algoritmi")
+    operacije = _lista_iz_upita("operacije")
+    if algoritmi:
+        df = df[df["algoritam"].isin(algoritmi)]
+    if operacije:
+        df = df[df["operacija"].isin(operacije)]
+
+    if df.empty:
+        abort(404, "Nijedno mjerenje ne odgovara izabranim filterima.")
+
+    dijelovi = []
+    if algoritmi:
+        dijelovi.append(", ".join(algoritmi))
+    if operacije:
+        dijelovi.append(", ".join(NAZIVI_OPERACIJA.get(o, o) for o in operacije))
+
     return send_file(
-        napravi_pdf(df, NAZIVI_OPERACIJA, NAZIVI_KATEGORIJA),
+        napravi_pdf(df, NAZIVI_OPERACIJA, NAZIVI_KATEGORIJA, " · ".join(dijelovi)),
         as_attachment=True,
         download_name="EncryptionApp-rezultati.pdf",
         mimetype="application/pdf",

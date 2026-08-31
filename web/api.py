@@ -1,20 +1,4 @@
-"""
-JSON API koji frontend poziva preko fetch-a.
 
-Sav kriptografski rad se izvrsava OVDJE, u Pythonu, kroz core/ i attacks/.
-TypeScript u pregledniku samo salje zahtjeve i prikazuje odgovore.
-
-Dvije stvari na koje se pazi pri serijalizaciji:
-
-1. Veliki cijeli brojevi (RSA modul, DH vrijednosti) prelaze 2^53, koliko
-   JavaScript moze tacno predstaviti u tipu number. Zato svaki takav broj ide
-   kao STRING - inace bi ga preglednik tiho zaokruzio.
-
-2. Kljucevi putuju do preglednika i nazad, jer je aplikacija bez stanja (bez
-   sesija i baze, kako je i zamisljeno). U stvarnom sistemu se tajni kljuc
-   nikad ne bi slao klijentu - ovdje je to svjesna posljedica toga sto je rijec
-   o demonstraciji u kojoj korisnik treba vidjeti sam kljuc.
-"""
 import base64
 import binascii
 import os
@@ -31,7 +15,7 @@ api = Blueprint("api", __name__, url_prefix="/api")
 
 
 class GreskaZahtjeva(Exception):
-    """Greska koju treba prikazati korisniku, a ne kao 500."""
+
 
     def __init__(self, poruka, status=400):
         super().__init__(poruka)
@@ -46,13 +30,10 @@ def _obradi_gresku(greska):
 
 @api.errorhandler(Exception)
 def _obradi_neocekivanu(greska):
-    # Poruka se prikazuje korisniku, pa mora biti citljiva, ali bez internih detalja
+
     return jsonify({"greska": "Neočekivana greška: %s" % greska}), 500
 
 
-# ---------------------------------------------------------------------------
-# Pomocne funkcije
-# ---------------------------------------------------------------------------
 
 def _telo() -> dict:
     podaci = request.get_json(silent=True)
@@ -111,9 +92,6 @@ def _sifrat_odgovor(sifrat: bytes) -> dict:
     }
 
 
-# ---------------------------------------------------------------------------
-# Simetricni algoritmi
-# ---------------------------------------------------------------------------
 
 @api.post("/kljuc")
 def generisi_kljuc():
@@ -152,7 +130,7 @@ def generisi_kljuc():
 
 @api.post("/sifruj")
 def sifruj():
-    """Enkriptuje i odmah dekriptuje, pa vrati oba vremena i potvrdu poklapanja."""
+
     podaci = _telo()
     id_alg = podaci.get("algoritam")
     meta = _meta(id_alg)
@@ -228,9 +206,6 @@ def sifruj():
     })
 
 
-# ---------------------------------------------------------------------------
-# RSA
-# ---------------------------------------------------------------------------
 
 @api.post("/rsa/kljuc")
 def rsa_kljuc():
@@ -288,9 +263,6 @@ def rsa_sifruj():
     })
 
 
-# ---------------------------------------------------------------------------
-# ECDH
-# ---------------------------------------------------------------------------
 
 @api.post("/ecdh/razmjena")
 def ecdh_razmjena():
@@ -336,9 +308,6 @@ def ecdh_hibridno():
     })
 
 
-# ---------------------------------------------------------------------------
-# Napadi
-# ---------------------------------------------------------------------------
 
 def _vrijednosti_u_tekst(vrijednosti: dict) -> list:
     """

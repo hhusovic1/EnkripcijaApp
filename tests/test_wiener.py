@@ -1,8 +1,4 @@
-"""
-Validacija Wienerovog napada iz attacks/wiener_rsa.py. Vidi thesis 3.3.6.
 
-Pokreni: python tests/test_wiener.py
-"""
 import math
 import os
 import sys
@@ -80,10 +76,6 @@ def test_demonstracija_oba_slucaja():
 
 
 def test_kontrast_u_broju_konvergenti():
-    """
-    Razlika koju demonstracija treba pokazati: kod ranjivog kljuca napad ima
-    stotine kandidata za pretragu, kod normalnog svega nekoliko.
-    """
     demo = wiener_rsa.demonstracija(1024)
     ranjivi = demo["ranjivi"]["napad"]["ukupno_konvergenti"]
     normalni = demo["normalni"]["napad"]["ukupno_konvergenti"]

@@ -1,18 +1,4 @@
-"""
-Provjere za crtanje grafova (benchmark/plot_results.py).
 
-Glavni razlog postojanja ovog fajla je regresija: Streamlit svaki rerun izvrsava
-u zasebnoj niti, a matplotlib nije thread-safe. Kad su dvije stranice crtale
-istovremeno, dijeljeno stanje mathtext parsera se kvarilo i javljala se greska
-
-    ValueError: $\\mathdefault{10^{1}}$
-    ParseException: Expected end of text, found '$'
-
-pri renderovanju oznaka logaritamske skale. Test ispod pokrece crtanje iz vise
-niti odjednom i pada ako se to ponovi.
-
-Pokreni: python tests/test_plot.py
-"""
 import os
 import sys
 import threading

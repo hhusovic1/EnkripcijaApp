@@ -1,10 +1,4 @@
-"""
-PDF izvjestaj s rezultatima mjerenja.
 
-Tabela je ista kao "Sirovi brojevi" na stranici Benchmark, samo grupisana po
-algoritmu i formatirana za stampu (A4 polozeno). Font je DejaVu Sans jer
-ugradjeni Helvetica u reportlabu nema nasa slova (c, c, z, s, dj).
-"""
 import datetime
 import io
 import os
@@ -71,8 +65,9 @@ def formatiraj_bajtove(bajtova) -> str:
     return f"{bajtova:g} B"
 
 
-def napravi_pdf(df, nazivi_operacija: dict, nazivi_kategorija: dict) -> io.BytesIO:
-    """Vraca gotov PDF u memoriji — nista se ne pise na disk."""
+def napravi_pdf(df, nazivi_operacija: dict, nazivi_kategorija: dict,
+                opis_izbora: str = "") -> io.BytesIO:
+
     font, font_bold = _registruj_fontove()
 
     # Podrazumijevani leading u reportlabu je 12 bez obzira na velicinu fonta,
@@ -112,10 +107,12 @@ def napravi_pdf(df, nazivi_operacija: dict, nazivi_kategorija: dict) -> io.Bytes
     dokument.addPageTemplates([PageTemplate(id="sve", frames=[okvir], onPage=podnozje)])
 
     datum = datetime.datetime.now().strftime("%d.%m.%Y. u %H:%M")
+    obim = (f"Izbor: <b>{opis_izbora}</b> — {len(df)} mjerenja"
+            if opis_izbora else f"Svih {len(df)} mjerenja")
     prica = [
         Paragraph(NASLOV_DOKUMENTA, stil_naslov),
         Paragraph(
-            f"Svih {len(df)} mjerenja iz <b>benchmark/results.csv</b>, grupisano po "
+            f"{obim} iz <b>benchmark/results.csv</b>, grupisano po "
             f"algoritmu. Srednje vrijeme i standardna devijacija računati su preko "
             f"navedenog broja ponavljanja. Izvezeno {datum}.",
             stil_podnaslov,

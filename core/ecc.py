@@ -1,10 +1,4 @@
-"""
-ECC (ECDH) - omotac oko `cryptography` biblioteke (X25519).
 
-Ovdje se elipticka kriva ne implementira rucno - to nosi previse suptilnih
-sigurnosnih zamki (timing napadi, invalid curve napadi) da bi vrijedilo
-raditi od nule za demonstracionu aplikaciju. Vidi thesis 3.4.5.
-"""
 from cryptography.hazmat.primitives.asymmetric import x25519
 
 

@@ -117,7 +117,7 @@ def _inv_shift_rows(state: list) -> list:
 
 
 def _mix_columns(state: list) -> list:
-    """Mnozenje kolone sa fiksnim polinomom u GF(2^8). Vidi 3.2.4."""
+
     out = [0] * 16
     for c in range(4):
         a0, a1, a2, a3 = state[4 * c: 4 * c + 4]
@@ -129,7 +129,7 @@ def _mix_columns(state: list) -> list:
 
 
 def _inv_mix_columns(state: list) -> list:
-    """Inverzno mnozenje, koeficijenti 0e/0b/0d/09."""
+
     out = [0] * 16
     for c in range(4):
         a0, a1, a2, a3 = state[4 * c: 4 * c + 4]
@@ -145,29 +145,23 @@ def _inv_mix_columns(state: list) -> list:
 
 
 def _add_round_key(state: list, round_key: list) -> list:
-    """XOR stanja s kljucem runde."""
+
     return [byte ^ round_key[i] for i, byte in enumerate(state)]
 
 
-# ---------------------------------------------------------------------------
-# Prosirenje kljuca - vidi 3.2.5
-# ---------------------------------------------------------------------------
 
 def _rot_word(word: list) -> list:
-    """[a0, a1, a2, a3] -> [a1, a2, a3, a0]"""
+
     return word[1:] + word[:1]
 
 
 def _sub_word(word: list) -> list:
-    """S-box nad svakim bajtom rijeci."""
+
     return [SBOX[byte] for byte in word]
 
 
 def _key_expansion(key: bytes) -> list:
-    """
-    Vidi 3.2.5 - RotWord, SubWord, Rcon.
-    Vraca listu kljuceva runde, svaki po 16 bajtova (Nr + 1 komada).
-    """
+
     _check_key(key)
     nk = len(key) // 4  # broj rijeci u kljucu: 4, 6 ili 8
     rounds = ROUNDS[len(key) * 8]
@@ -191,9 +185,6 @@ def _key_expansion(key: bytes) -> list:
     ]
 
 
-# ---------------------------------------------------------------------------
-# Validacija ulaza
-# ---------------------------------------------------------------------------
 
 def _check_key(key: bytes) -> None:
     if not isinstance(key, (bytes, bytearray)):
@@ -216,12 +207,9 @@ def _check_block(block: bytes) -> None:
         )
 
 
-# ---------------------------------------------------------------------------
-# Javni interfejs
-# ---------------------------------------------------------------------------
 
 def generate_keys(key_size: int = 128) -> dict:
-    """key_size je 128, 192 ili 256."""
+
     if key_size not in VALID_KEY_SIZES:
         raise ValueError(
             "Duzina kljuca mora biti 128, 192 ili 256 bita, dobijeno %r" % (key_size,)
@@ -230,7 +218,7 @@ def generate_keys(key_size: int = 128) -> dict:
 
 
 def encrypt(plaintext: bytes, key: bytes) -> bytes:
-    """16-bajtni blok. Vidi pseudokod u 3.2.6."""
+
     _check_block(plaintext)
     round_keys = _key_expansion(key)
     rounds = len(round_keys) - 1
@@ -243,7 +231,7 @@ def encrypt(plaintext: bytes, key: bytes) -> bytes:
         state = _mix_columns(state)
         state = _add_round_key(state, round_keys[r])
 
-    # Posljednja runda je bez MixColumns - inace bi se dala trivijalno ponistiti
+
     state = _sub_bytes(state)
     state = _shift_rows(state)
     state = _add_round_key(state, round_keys[rounds])

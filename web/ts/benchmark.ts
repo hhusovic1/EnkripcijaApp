@@ -457,6 +457,32 @@ function popuniTabelu(izabrani: Set<string>): void {
     el('sazetak-tabele').textContent = opis
         ? `Prikazano ${redovi.length} od ukupno ${MJERENJA.length} mjerenja (${opis}).`
         : `Prikazano ${redovi.length} od ukupno ${MJERENJA.length} mjerenja.`;
+
+    osvjeziVezuPdf(algoritmiUPrikazu(izabrani, algoritam, izborAlgoritma), operacija);
+}
+
+/**
+ * Algoritmi koje tabela trenutno pokazuje — ista logika kao filter iznad, samo
+ * kao lista. Prazna lista znaci "bez filtera", tj. sve iz CSV-a.
+ */
+function algoritmiUPrikazu(izabrani: Set<string>, algoritam: string,
+                           izborAlgoritma: string): string[] {
+    if (algoritam) return [algoritam];
+    if (izborAlgoritma === SVI) return [];
+    return Array.from(izabrani);
+}
+
+/** PDF izvozi tacno ono sto tabela prikazuje — filteri idu kroz query string. */
+function osvjeziVezuPdf(algoritmi: string[], operacija: string): void {
+    const veza = document.getElementById('veza-pdf') as HTMLAnchorElement | null;
+    if (!veza) return;
+
+    const upit = new URLSearchParams();
+    if (algoritmi.length) upit.set('algoritmi', algoritmi.join(','));
+    if (operacija) upit.set('operacije', operacija);
+
+    const osnova = veza.dataset.osnova ?? veza.href;
+    veza.href = upit.toString() ? `${osnova}?${upit}` : osnova;
 }
 
 // ------------------------------------------------------------------ Osvježavanje

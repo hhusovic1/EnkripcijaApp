@@ -176,7 +176,8 @@
         </div>
         <div class="filter-akcije">
             <button class="sekundarno skriven" type="button" id="dugme-ponisti">Poništi filtere</button>
-            <a class="veza-dugme" href="{{ url_for('glavni.preuzmi_pdf') }}">
+            <a class="veza-dugme" id="veza-pdf" href="{{ url_for('glavni.preuzmi_pdf') }}"
+               data-osnova="{{ url_for('glavni.preuzmi_pdf') }}">
                 <button type="button">Preuzmi PDF</button>
             </a>
         </div>

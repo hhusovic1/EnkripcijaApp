@@ -264,9 +264,6 @@ class Mallory:
         return iv + sifrat
 
 
-# ---------------------------------------------------------------------------
-# Scenariji - vracaju listu koraka koju prikazuje i terminal i aplikacija
-# ---------------------------------------------------------------------------
 
 PORUKA = "Bobe, broj racuna je BA39 1290 0000 0012 3456."
 
