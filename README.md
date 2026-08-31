@@ -43,11 +43,7 @@ Aktivacija na Windowsu:
 .venv\Scripts\activate
 ```
 
-Na Linuxu i macOS-u:
 
-```bash
-source .venv/bin/activate
-```
 
 Zatim:
 

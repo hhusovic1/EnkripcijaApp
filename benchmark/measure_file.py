@@ -27,10 +27,7 @@ LIMIT_BIBLIOTEKA = 64 * 1024 * 1024  # 64 MB
 
 
 class Algoritam:
-    """
-    Jedan mjerljivi algoritam: kako se pripremi kljuc i kako se enkriptuje
-    i dekriptuje cijeli niz bajtova (ukljucujuci IV/nonce u samom sifratu).
-    """
+
 
     def __init__(self, naziv, kategorija, opis, pripremi):
         self.naziv = naziv
@@ -43,12 +40,12 @@ class Algoritam:
         return LIMIT_RUCNI if self.kategorija == "simetricni-rucni" else LIMIT_BIBLIOTEKA
 
     def pripremi(self):
-        """Vraca (enkriptuj, dekriptuj, opis_kljuca)."""
+
         return self._pripremi()
 
 
 def _cbc_algoritam(encrypt_block, decrypt_block, block_size):
-    """Pakuje blokovsku sifru u par funkcija nad cijelim nizom, IV na pocetku."""
+
 
     def enkriptuj(podaci, on_progress=None):
         iv, sifrat = modes.cbc_encrypt(podaci, encrypt_block, block_size,
@@ -123,11 +120,7 @@ def _pripremi_chacha():
 
 
 def _pripremi_hibridni(rsa_bita=2048):
-    """
-    Hibridni kriptosistem iz 3.5.3 - jedini nacin da RSA ucestvuje u obradi
-    cijelog fajla: RSA enkriptuje nasumican AES kljuc, AES enkriptuje sadrzaj.
-    Mjeri se ukupno vrijeme oba koraka.
-    """
+
 
     def pripremi():
         rsa_kljucevi = rsa.generate_keys(rsa_bita)
@@ -176,18 +169,9 @@ ALGORITMI = [
 PO_NAZIVU = {a.naziv: a for a in ALGORITMI}
 
 
-# ---------------------------------------------------------------------------
-# Mjerenje
-# ---------------------------------------------------------------------------
 
 def izmjeri(podaci: bytes, naziv: str, on_progress=None) -> dict:
-    """
-    Mjeri enkripciju i dekripciju zadanih bajtova jednim algoritmom.
 
-    Za razliku od run_benchmark.py ovdje se mjeri JEDAN prolaz, bez ponavljanja -
-    kod velikih ulaza je i jedan prolaz dovoljno dug da vrijeme bude stabilno, a
-    korisnik ne ceka minutama. Zato nema standardne devijacije.
-    """
     algoritam = PO_NAZIVU.get(naziv)
     if algoritam is None:
         raise KeyError("Nepoznat algoritam: %r" % naziv)
@@ -231,20 +215,14 @@ def izmjeri(podaci: bytes, naziv: str, on_progress=None) -> dict:
     }
 
 
-# Algoritmi kojih nema u results.csv procjenjuju se preko srodnog algoritma.
-# Kod hibridne sheme RSA obradi samo 16 bajtova sesijskog kljuca, a sve ostalo
-# radi AES-128 - pa je njegova propusnost dobra procjena za cjelinu.
+
 ZAMJENA_ZA_PROCJENU = {
     "RSA-2048 + AES-128 (hibridno)": "AES-128",
 }
 
 
 def procijeni_trajanje(naziv: str, velicina: int, propusnosti: dict) -> float:
-    """
-    Gruba procjena trajanja (enkripcija + dekripcija) na osnovu propusnosti
-    izmjerenih u run_benchmark.py. Sluzi da se korisnik upozori prije nego
-    pokrene mjerenje koje traje minutama.
-    """
+
     propusnost = propusnosti.get(naziv)
     if not propusnost:
         propusnost = propusnosti.get(ZAMJENA_ZA_PROCJENU.get(naziv, ""))

@@ -1,9 +1,4 @@
-"""
-Validacija PKCS#7 dopune i CBC rezima iz core/modes.py, plus provjera da
-bibliotecki moduli (ECC, ChaCha20) rade kako treba.
 
-Pokreni: python tests/test_modes.py
-"""
 import os
 import sys
 

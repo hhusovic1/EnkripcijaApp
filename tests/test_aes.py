@@ -1,12 +1,4 @@
-"""
-Validacija AES implementacije iz core/aes.py.
 
-1. Zvanicni FIPS-197 test vektori (Appendix B i Appendix C za sve tri duzine kljuca).
-2. Unakrsna provjera protiv pycryptodome AES-a nad nasumicnim ulazima.
-3. Provjera da je S-box izveden iz definicije jednak tabeli iz standarda.
-
-Pokreni: python tests/test_aes.py
-"""
 import os
 import sys
 

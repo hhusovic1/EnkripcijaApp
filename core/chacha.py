@@ -1,6 +1,4 @@
-"""
-ChaCha20 - omotac oko pycryptodome. Vidi thesis 2.3.1.
-"""
+
 import os
 
 from Crypto.Cipher import ChaCha20

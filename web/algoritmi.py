@@ -1,12 +1,7 @@
-"""
-Metapodaci o algoritmima za web sloj - naziv, vrsta, opis i napomena.
 
-Drzi se odvojeno od ruta jer isti podaci trebaju i sabloni (za padajuci meni) i
-JavaScript (za prikaz opisa pri promjeni izbora) i API (za validaciju).
-"""
 from core import aes
 
-LIMIT_RUCNI = 64 * 1024  # bajtova - iznad ovoga stranica postaje neupotrebljiva
+LIMIT_RUCNI = 64 * 1024
 
 
 def _aes(bita: int) -> dict:

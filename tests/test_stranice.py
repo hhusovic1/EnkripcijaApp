@@ -1,13 +1,4 @@
-"""
-Provjera Streamlit stranica kroz ugradjeni AppTest - stranice se izvrsavaju
-headless, bez preglednika.
 
-Cilj nije provjeriti izgled nego da se svaka grana koda stvarno izvrsi bez
-izuzetka: svi algoritmi na stranici Core algoritmi, oba scenarija MITM-a,
-Wienerov napad, i da grafovi na Benchmark stranici prodju.
-
-Pokreni: python tests/test_stranice.py
-"""
 import os
 import sys
 

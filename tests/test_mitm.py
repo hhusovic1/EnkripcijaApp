@@ -1,12 +1,4 @@
-"""
-Validacija Diffie-Hellman razmjene i MITM napada iz attacks/mitm_dh.py.
 
-Provjerava i da uredna razmjena radi (3.4.3) i da napad uspijeva tacno onako
-kako 3.4.4 opisuje - ukljucujuci ono sto je najlakse previdjeti: Mallory
-nikad ne sazna tajne eksponente, nego iskoristi izostanak autentifikacije.
-
-Pokreni: python tests/test_mitm.py
-"""
 import os
 import sys
 

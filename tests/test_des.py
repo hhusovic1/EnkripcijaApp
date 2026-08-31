@@ -1,14 +1,4 @@
-"""
-Validacija DES/3DES implementacije iz core/des.py.
 
-Dvije nezavisne provjere:
-1. Zvanicni test vektori (FIPS 46-3 / NBS "Validating the Correctness of
-   Hardware Implementations of the NBS DES", Special Publication 500-20).
-2. Unakrsna provjera protiv pycryptodome DES-a nad nasumicnim ulazima -
-   hvata greske koje fiksni vektori mogu propustiti.
-
-Pokreni: python tests/test_des.py
-"""
 import os
 import sys
 

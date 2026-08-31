@@ -1,19 +1,6 @@
-"""
-DES / 3DES - rucna implementacija.
 
-Vidi thesis poglavlje 3.1: Feistelova mreza, IP/IP^-1, key schedule (PC-1, PC-2),
-S-blokovi S1-S8, ekspanziona permutacija E, permutacija P.
-
-Blok = 64 bita (8 bajtova), kljuc = 64 bita (56 efektivnih + 8 bita pariteta).
-Ovaj modul radi nad JEDNIM blokom; padding i rezim rada dolaze iznad njega.
-
-Validirano protiv zvanicnih FIPS 46-3 / NBS test vektora - vidi tests/test_des.py.
-"""
 import os
 
-# ---------------------------------------------------------------------------
-# Permutacione tabele (FIPS 46-3). Sve su 1-indeksirane, kako su i u standardu.
-# ---------------------------------------------------------------------------
 
 # Inicijalna permutacija IP (3.1.3)
 IP = [
@@ -141,8 +128,6 @@ SBOXES = [
 BLOCK_SIZE = 8  # bajtova
 KEY_SIZE = 8  # bajtova
 
-# Slabi kljucevi (3.1.4) - kod njih vrijedi K1 = K2 = ... = K16, pa je enkripcija
-# involucija: E_k(E_k(P)) == P. Ima ih tacno cetiri.
 WEAK_KEYS = {
     bytes.fromhex("0101010101010101"),
     bytes.fromhex("FEFEFEFEFEFEFEFE"),
@@ -150,8 +135,7 @@ WEAK_KEYS = {
     bytes.fromhex("1F1F1F1F0E0E0E0E"),
 }
 
-# Polu-slabi kljucevi (3.1.4) - sest parova (K, K') kod kojih je E_K = D_K',
-# tj. enkripcija jednim kljucem se ponistava enkripcijom drugim.
+
 SEMI_WEAK_KEY_PAIRS = [
     (bytes.fromhex("01FE01FE01FE01FE"), bytes.fromhex("FE01FE01FE01FE01")),
     (bytes.fromhex("1FE01FE00EF10EF1"), bytes.fromhex("E01FE01FF10EF10E")),
@@ -165,17 +149,9 @@ SEMI_WEAK_KEY_PAIRS = [
 AVOIDED_KEYS = WEAK_KEYS | {key for pair in SEMI_WEAK_KEY_PAIRS for key in pair}
 
 
-# ---------------------------------------------------------------------------
-# Pomocne funkcije nad bitovima
-# ---------------------------------------------------------------------------
 
 def _permute(block: int, table: list, in_bits: int) -> int:
-    """
-    Primjenjuje permutacionu tabelu na cjelobrojnu reprezentaciju bloka.
 
-    Tabele su 1-indeksirane i broje bite s LIJEVA (bit 1 = najznacajniji),
-    kako su zapisane u standardu, pa se pozicija prevodi u pomak udesno.
-    """
     result = 0
     for position in table:
         result = (result << 1) | ((block >> (in_bits - position)) & 1)
@@ -188,10 +164,7 @@ def _rotate_left_28(value: int, amount: int) -> int:
 
 
 def _feistel(right: int, subkey: int) -> int:
-    """
-    Funkcija f iz Feistelove mreze (3.1.3):
-    ekspanzija E -> XOR s podkljucem -> S-blokovi -> permutacija P.
-    """
+
     expanded = _permute(right, E, 32) ^ subkey
 
     substituted = 0
@@ -206,9 +179,6 @@ def _feistel(right: int, subkey: int) -> int:
     return _permute(substituted, P, 32)
 
 
-# ---------------------------------------------------------------------------
-# Validacija ulaza
-# ---------------------------------------------------------------------------
 
 def _check_key(key: bytes) -> None:
     if not isinstance(key, (bytes, bytearray)):
@@ -231,15 +201,9 @@ def _check_block(block: bytes) -> None:
         )
 
 
-# ---------------------------------------------------------------------------
-# Key schedule
-# ---------------------------------------------------------------------------
 
 def _key_schedule(key: bytes) -> list:
-    """
-    Generise 16 podkljuceva K1..K16 (PC-1 -> rotacije -> PC-2).
-    Vidi 3.1.3. Svaki podkljuc je 48-bitni int.
-    """
+
     _check_key(key)
     key_int = int.from_bytes(key, "big")
 
@@ -255,15 +219,8 @@ def _key_schedule(key: bytes) -> list:
     return subkeys
 
 
-# ---------------------------------------------------------------------------
-# Javni interfejs
-# ---------------------------------------------------------------------------
-
 def set_odd_parity(key: bytes) -> bytes:
-    """
-    Postavlja 8. bit svakog bajta tako da bajt ima neparan broj jedinica.
-    DES te bite ignorise pri enkripciji - sluze samo za detekciju gresaka.
-    """
+
     out = bytearray()
     for byte in key:
         b = byte & 0xFE
@@ -274,12 +231,7 @@ def set_odd_parity(key: bytes) -> bytes:
 
 
 def generate_keys() -> dict:
-    """
-    Generise 64-bitni DES kljuc (56 efektivnih + 8 bita pariteta).
 
-    Slabi i polu-slabi kljucevi se preskacu - ima ih svega 16 na 2^56, pa je
-    provjera pri generisanju besplatna, kako i 3.1.4 predlaze.
-    """
     while True:
         key = set_odd_parity(os.urandom(KEY_SIZE))
         if key not in AVOIDED_KEYS:
@@ -287,16 +239,7 @@ def generate_keys() -> dict:
 
 
 def generate_keys_3des(keying_option: int = 1) -> dict:
-    """
-    3DES kljucevi. Numeracija opcija prati Tabelu 3.11 iz rada (3.1.5):
 
-        Opcija 1: k1, k2, k3 nezavisni     - 168 bita nominalno, ~112 efektivno
-        Opcija 2: k1 = k3, k2 nezavisan    - 112 bita nominalno, ~80 efektivno
-        Opcija 3: k1 = k2 = k3             - svodi se na obicni DES (56 bita)
-
-    Efektivne duzine su nize od nominalnih zbog napada tipa susret u sredini
-    (meet-in-the-middle), sto je detaljno obrazlozeno u 3.1.5.
-    """
     if keying_option not in (1, 2, 3):
         raise ValueError("keying_option mora biti 1, 2 ili 3 (vidi Tabelu 3.11)")
 
@@ -314,13 +257,6 @@ def generate_keys_3des(keying_option: int = 1) -> dict:
 
 
 def encrypt(plaintext: bytes, key: bytes) -> bytes:
-    """
-    Enkriptuje 64-bitni blok. Koraci (3.1.3):
-    1. Inicijalna permutacija IP
-    2. 16 rundi Feistelove mreze (koristi _key_schedule ispod)
-    3. Zamjena L16/R16
-    4. Zavrsna permutacija IP^-1
-    """
     return _process_block(plaintext, _key_schedule(key))
 
 
@@ -346,10 +282,10 @@ def _process_block(block: bytes, subkeys: list) -> bytes:
 
 
 def encrypt_3des(plaintext: bytes, k1: bytes, k2: bytes, k3: bytes) -> bytes:
-    """EDE sema: C = E_k3(D_k2(E_k1(P))). Vidi 3.1.5."""
+
     return encrypt(decrypt(encrypt(plaintext, k1), k2), k3)
 
 
 def decrypt_3des(ciphertext: bytes, k1: bytes, k2: bytes, k3: bytes) -> bytes:
-    """P = D_k1(E_k2(D_k3(C)))."""
+
     return decrypt(encrypt(decrypt(ciphertext, k3), k2), k1)

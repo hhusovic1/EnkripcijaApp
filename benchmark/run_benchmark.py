@@ -1,23 +1,4 @@
-"""
-Benchmark harness - mjeri vrijeme enkripcije/dekripcije, generisanja kljuceva i
-razmjene kljuceva za sve algoritme. Rezultati idu u thesis poglavlje 3.5.
 
-Pokreni:
-    python benchmark/run_benchmark.py            # puno mjerenje (par minuta)
-    python benchmark/run_benchmark.py --quick    # brza provjera da sve radi
-    python benchmark/run_benchmark.py --budget 5 # duze mjerenje, stabilniji brojevi
-
-Rezultat je benchmark/results.csv, koji ˇcita i Streamlit aplikacija i skripta
-za crtanje grafova (plot_results.py). Mjerenje se radi offline jer je rucni
-AES/DES prespor da bi se pokretao uzivo u aplikaciji.
-
-VAZNO za tumacenje brojeva: DES, 3DES i AES su ovdje RUCNE implementacije u
-cistom Pythonu, pisane radi citljivosti i podudaranja s opisom u radu, a ne radi
-brzine. ChaCha20 i "(biblioteka)" varijante idu kroz optimizovani C kod. Zato se
-apsolutni brojevi ne smiju porediti izmedju te dvije grupe kao da mjere isti
-algoritam - mjeri se implementacija, ne samo algoritam. Kolona `kategorija`
-postoji upravo da se to razdvoji.
-"""
 import argparse
 import os
 import statistics
@@ -55,15 +36,7 @@ DEFAULT_BUDGET = 2.0  # sekundi po mjernoj tacki
 
 def izmjeri(func, *args, budget=DEFAULT_BUDGET, min_rep=MIN_PONAVLJANJA,
             max_rep=MAX_PONAVLJANJA) -> dict:
-    """
-    Mjeri vrijeme izvrsavanja i vraca prosjek, standardnu devijaciju i broj
-    ponavljanja.
 
-    Broj ponavljanja je adaptivan: ponavlja se dok se ne potrosi vremenski
-    budzet, ali nikad manje od `min_rep` niti vise od `max_rep`. Time brze
-    operacije dobiju punih 50 ponavljanja (pa im je devijacija smislena), a
-    spore ne blokiraju cijelo mjerenje satima.
-    """
     func(*args)  # zagrijavanje - prvi poziv placa import/alokacije/cache
 
     times = []
@@ -115,9 +88,6 @@ def zapisi(rezultati, algoritam, kategorija, operacija, mjerenje,
     ))
 
 
-# ---------------------------------------------------------------------------
-# Pojedinacna mjerenja po algoritmu
-# ---------------------------------------------------------------------------
 
 def mjeri_blokovsku_sifru(rezultati, naziv, kategorija, encrypt_block, decrypt_block,
                           block_size, velicine, duzina_kljuca, budget):
@@ -183,11 +153,7 @@ def mjeri_aes(rezultati, velicine, budget):
 
 
 def mjeri_aes_biblioteka(rezultati, velicine, budget):
-    """
-    Ista sifra kroz optimizovanu biblioteku - referentna tacka koja pokazuje
-    koliko od izmjerenog vremena otpada na algoritam, a koliko na Python.
-    Podrzava tvrdnje o performansama iz 3.5.1.
-    """
+
     from Crypto.Cipher import AES as RefAES
 
     print("\nAES-128 (biblioteka, pycryptodome)")
@@ -233,11 +199,7 @@ def mjeri_chacha(rezultati, velicine, budget):
 
 
 def mjeri_rsa(rezultati, budget, keygen_budget):
-    """
-    RSA se ne mjeri kroz vise velicina podataka jer moze enkriptovati samo
-    poruku manju od modula - mjeri se jedan blok maksimalne dopustene duzine.
-    Zato RSA na grafu "vrijeme vs velicina" ima jednu tacku po duzini kljuca.
-    """
+
     for duzina in RSA_KEY_SIZES:
         naziv = "RSA-%d" % duzina
         print("\n%s (rucna implementacija)" % naziv)
@@ -261,7 +223,7 @@ def mjeri_rsa(rezultati, budget, keygen_budget):
 
 
 def mjeri_ecdh(rezultati, budget):
-    """ECDH ne enkriptuje - mjeri se generisanje para i izvodjenje zajednicke tajne."""
+
     print("\nECDH / X25519 (biblioteka, cryptography)")
     zapisi(rezultati, "ECDH (X25519)", "asimetricni", "generisanje_kljuca",
            izmjeri(ecc.generate_keys, budget=budget), None, 256)
@@ -273,10 +235,6 @@ def mjeri_ecdh(rezultati, budget):
     zapisi(rezultati, "ECDH (X25519)", "asimetricni", "razmjena_kljuca",
            mjerenje, None, 256)
 
-
-# ---------------------------------------------------------------------------
-# Glavni tok
-# ---------------------------------------------------------------------------
 
 def run_all(quick=False, budget=DEFAULT_BUDGET):
     if quick:

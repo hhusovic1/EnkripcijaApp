@@ -1,16 +1,4 @@
-"""
-RSA - rucna implementacija.
 
-Vidi thesis poglavlje 3.3: generisanje kljuceva (3.3.3), enkripcija/dekripcija (3.3.4),
-Wienerov napad na mali eksponent d (3.3.6).
-
-sympy.randprime() interno koristi Miller-Rabinov test primalnosti, a ugradjeni
-pow(base, exp, mod) vec radi efikasno kvadriraj-i-mnozi.
-
-UPOZORENJE: ovo je "udzbenicki" RSA, bez OAEP dopune. Deterministican je i time
-ranjiv na napade odabranim otvorenim tekstom - u praksi se nikad ne koristi ovako.
-Ovdje sluzi da se matematika iz 3.3 vidi golim okom.
-"""
 import math
 
 from sympy import randprime
@@ -24,27 +12,13 @@ VALID_KEY_SIZES = (1024, 2048, 3072, 4096)
 # ---------------------------------------------------------------------------
 
 def _random_prime(bits: int) -> int:
-    """
-    Prost broj sa tacno `bits` bita, iz gornjeg dijela opsega.
-
-    Donja granica je 2^(bits-1) * sqrt(2), cime se garantuje da proizvod dva
-    ovakva prosta broja ima tacno 2*bits bita - inace modul zna ispasti kraci
-    od trazenog, pa "RSA-2048" u stvari bude 2047-bitni.
-
-    Granica se racuna cjelobrojno: sqrt(2) * 2^(bits-1) = sqrt(2 * 2^(2*bits-2)).
-    Mnozenje s float konstantom bi za bits >= 1024 preslo opseg tipa float.
-    """
     low = math.isqrt(2 << (2 * bits - 2))
     high = (1 << bits) - 1
     return randprime(low, high)
 
 
 def generate_keys(bits: int = 2048) -> dict:
-    """
-    Vraca {'public': (n, e), 'private': (n, d)}.
-    Koraci (3.3.3): generisi p, q -> n = p*q -> phi(n) = (p-1)(q-1)
-    -> e = 65537 -> d = e^-1 mod phi(n)
-    """
+
     if bits not in VALID_KEY_SIZES:
         raise ValueError(
             "Duzina kljuca mora biti jedna od %s bita, dobijeno %r"
@@ -79,13 +53,7 @@ def generate_keys(bits: int = 2048) -> dict:
 
 
 def generate_vulnerable_keys(bits: int = 1024) -> dict:
-    """
-    Namjerno slab kljuc za demonstraciju Wienerovog napada (3.3.6):
-    bira se mali privatni eksponent d < n^(1/4) / 3, pa se e racuna iz njega.
 
-    Ovakav izbor se u praksi radio da bi dekripcija bila brza - Wiener je 1990.
-    pokazao da je time cijeli kljuc gotov.
-    """
     half = bits // 2
 
     while True:
@@ -150,17 +118,9 @@ def decrypt(ciphertext: int, private_key: tuple) -> int:
     return pow(ciphertext, d, n)
 
 
-# ---------------------------------------------------------------------------
-# Rad s bajtovima - most izmedju teksta u UI-ju i cijelih brojeva iznad
-# ---------------------------------------------------------------------------
 
 def max_message_bytes(n: int) -> int:
-    """
-    Najveci broj bajtova otvorenog teksta koji stane u jedan RSA blok.
 
-    Jedan bajt se trosi na vodecu 0x01 oznaku, koja cuva vodece nule poruke
-    pri konverziji bajtovi -> broj -> bajtovi.
-    """
     return (n.bit_length() - 1) // 8 - 1
 
 
@@ -193,9 +153,7 @@ def decrypt_bytes(ciphertext: bytes, private_key: tuple) -> bytes:
     return stripped[1:]
 
 
-# ---------------------------------------------------------------------------
-# Wienerov napad - vidi 3.3.6
-# ---------------------------------------------------------------------------
+
 
 def _continued_fraction(numerator: int, denominator: int) -> list:
     """Razvoj razlomka numerator/denominator u verizni razlomak [a0; a1, a2, ...]."""
@@ -225,17 +183,7 @@ def _is_perfect_square(value: int) -> bool:
 
 
 def wiener_attack(public_key: tuple):
-    """
-    Pokusaj rekonstruisati d preko razvoja u verizni razlomak,
-    kad je d namjerno mali. Vidi 3.3.6.
 
-    Ideja: iz e*d = 1 (mod phi) slijedi e/n ~ k/d, pa je k/d jedna od konvergenti
-    veriznog razlomka za e/n. Za svaku konvergentu se provjeri da li daje
-    cjelobrojno phi cije rjesenje kvadratne jednacine x^2 - (n-phi+1)x + n = 0
-    daje dva cijela faktora - ako da, d je pogodjen.
-
-    Vraca d ako uspije, inace None.
-    """
     n, e = public_key
 
     for k, d in _convergents(_continued_fraction(e, n)):

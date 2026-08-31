@@ -1,34 +1,8 @@
-"""
-Padding i rezim rada - sloj iznad blokovnih sifara (DES, 3DES, AES).
 
-DES i AES enkriptuju tacno jedan blok (8 odnosno 16 bajtova). Da bi se
-enkriptovao tekst proizvoljne duzine treba dvoje:
-
-1. PKCS#7 dopuna - dopuni poruku do cijelog broja blokova, tako da se dopuna
-   moze jednoznacno ukloniti pri dekripciji.
-2. Rezim rada - ovdje CBC (Cipher Block Chaining): svaki blok se prije
-   enkripcije XOR-uje s prethodnim sifratom, pa isti otvoreni blok daje
-   razlicit sifrat na razlicitim mjestima.
-
-Zasto ne ECB: u ECB rezimu jednaki blokovi daju jednake sifrate, pa se struktura
-podataka vidi kroz sifrat (poznati primjer je "ECB pingvin"). CBC to rjesava uz
-nasumican inicijalizacioni vektor (IV), koji nije tajan i salje se uz sifrat.
-"""
 import os
 
 
-# ---------------------------------------------------------------------------
-# PKCS#7 dopuna
-# ---------------------------------------------------------------------------
-
 def pkcs7_pad(data: bytes, block_size: int) -> bytes:
-    """
-    Dopunjava podatke do visekratnika velicine bloka. Vrijednost svakog dodatog
-    bajta jednaka je broju dodatih bajtova.
-
-    Ako je poruka vec tacan visekratnik, dodaje se cijeli blok dopune - inace se
-    ne bi znalo da li su posljednji bajtovi dopuna ili podatak.
-    """
     if not 1 <= block_size <= 255:
         raise ValueError("Velicina bloka mora biti izmedju 1 i 255 bajtova")
     padding_length = block_size - (len(data) % block_size)
@@ -36,7 +10,7 @@ def pkcs7_pad(data: bytes, block_size: int) -> bytes:
 
 
 def pkcs7_unpad(data: bytes, block_size: int) -> bytes:
-    """Uklanja PKCS#7 dopunu uz provjeru ispravnosti."""
+
     if not data or len(data) % block_size != 0:
         raise ValueError(
             "Podaci za uklanjanje dopune moraju biti visekratnik bloka (%d bajta), "
@@ -52,9 +26,6 @@ def pkcs7_unpad(data: bytes, block_size: int) -> bytes:
     return data[:-padding_length]
 
 
-# ---------------------------------------------------------------------------
-# CBC rezim
-# ---------------------------------------------------------------------------
 
 def _xor(a: bytes, b: bytes) -> bytes:
     return bytes(x ^ y for x, y in zip(a, b))
@@ -65,17 +36,6 @@ PROGRESS_SVAKIH_BLOKOVA = 512
 
 def cbc_encrypt(plaintext: bytes, encrypt_block, block_size: int, iv: bytes = None,
                 on_progress=None) -> tuple:
-    """
-    Enkriptuje poruku proizvoljne duzine u CBC rezimu.
-
-    `encrypt_block` je funkcija jednog bloka - npr. lambda b: aes.encrypt(b, key).
-    Vraca (iv, ciphertext); IV se generise nasumicno ako nije zadat.
-
-    `on_progress(obradjeno_bajtova, ukupno_bajtova)` se, ako je zadat, poziva
-    povremeno tokom obrade - koristi ga aplikacija za prikaz napretka kod
-    velikih ulaza. Poziva se svakih PROGRESS_SVAKIH_BLOKOVA blokova, dakle
-    dovoljno rijetko da ne utice na izmjereno vrijeme.
-    """
     if iv is None:
         iv = os.urandom(block_size)
     elif len(iv) != block_size:
@@ -104,11 +64,7 @@ def cbc_encrypt(plaintext: bytes, encrypt_block, block_size: int, iv: bytes = No
 
 def cbc_decrypt(ciphertext: bytes, decrypt_block, block_size: int, iv: bytes,
                 on_progress=None) -> bytes:
-    """
-    Inverz od cbc_encrypt. `decrypt_block` dekriptuje jedan blok.
 
-    `on_progress` radi isto kao kod cbc_encrypt - vidi tamo.
-    """
     if len(iv) != block_size:
         raise ValueError(
             "IV mora imati tacno %d bajta, dobijeno %d" % (block_size, len(iv))

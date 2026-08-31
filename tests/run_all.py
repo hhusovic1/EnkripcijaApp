@@ -1,8 +1,4 @@
-"""
-Pokrece sve test module odjednom.
 
-Pokreni: python tests/run_all.py
-"""
 import os
 import sys
 import time

@@ -1,13 +1,5 @@
-"""
-Crta grafove iz benchmark/results.csv i snima ih kao PNG u benchmark/figures/.
 
-Pokreni (nakon run_benchmark.py):
-    python benchmark/plot_results.py
 
-Ove slike idu direktno u poglavlje 3.5 rada. Streamlit aplikacija ne koristi
-ove PNG-ove nego crta interaktivne verzije istih grafova iz istog CSV-a, pa su
-brojevi u radu i u aplikaciji garantovano isti.
-"""
 import functools
 import io
 import os
@@ -72,13 +64,6 @@ def _stil_ose(ax, xlabel, ylabel, naslov):
     ax.set_axisbelow(True)
 
 
-# ---------------------------------------------------------------------------
-# Oznake na logaritamskim osama
-#
-# Podrazumijevani formatter za log-skalu ispisuje 10^n kroz mathtext ($...$).
-# Osim sto je to izvor gornjeg problema s nitima, "10^4 B" je i teze citljivo
-# od "10 KB". Zato se koriste obicne tekstualne oznake.
-# ---------------------------------------------------------------------------
 
 def formatiraj_bajtove(vrijednost, _pozicija=None) -> str:
     if vrijednost <= 0:
@@ -110,12 +95,7 @@ def oznaci_log_osu(ax, os: str, vrsta: str):
 
 
 def serijalizovano(func):
-    """
-    Osigurava da se u datom trenutku crta samo jedna figura.
 
-    Bez ovoga dvije Streamlit niti mogu istovremeno uci u matplotlib i pokvariti
-    dijeljeno stanje parsera - vidi komentar uz _LOCK.
-    """
 
     @functools.wraps(func)
     def omotac(*args, **kwargs):
@@ -126,12 +106,7 @@ def serijalizovano(func):
 
 
 def u_sliku(fig, dpi: int = 150) -> bytes:
-    """
-    Renderuje figuru u PNG bajtove i zatvara je.
 
-    Aplikacija koristi ovo umjesto st.pyplot() da renderovanje ostane unutar
-    istog zakljucavanja kao i crtanje - vidi komentar uz _LOCK.
-    """
     with _LOCK:
         bafer = io.BytesIO()
         fig.savefig(bafer, format="png", dpi=dpi, bbox_inches="tight")
@@ -139,21 +114,13 @@ def u_sliku(fig, dpi: int = 150) -> bytes:
     return bafer.getvalue()
 
 
-# ---------------------------------------------------------------------------
-# Graf 1: vrijeme vs velicina podataka
-# ---------------------------------------------------------------------------
 
 @serijalizovano
 def graf_vrijeme_vs_velicina(df: pd.DataFrame):
-    """
-    Log-log skala jer se raspon proteze preko vise redova velicine: rucni DES
-    na 64 KB i ChaCha20 na 1 KB razlikuju se za faktor od preko 10^5.
-    """
+
     fig, axes = plt.subplots(1, 2, figsize=(13, 5.5), sharey=True)
 
-    # Opseg velicina koje RSA uopste moze obraditi - koristi se za sjencanje.
-    # RSA nema izbor velicine ulaza: poruka mora biti manja od modula, pa svaka
-    # duzina kljuca ima tacno jednu mogucu velicinu bloka.
+
     rsa_velicine = df[
         df["algoritam"].str.startswith("RSA") & df["velicina_bajta"].notna()
     ]["velicina_bajta"]
@@ -211,9 +178,6 @@ def graf_vrijeme_vs_velicina(df: pd.DataFrame):
     return fig
 
 
-# ---------------------------------------------------------------------------
-# Graf 2: generisanje kljuca vs duzina kljuca
-# ---------------------------------------------------------------------------
 
 @serijalizovano
 def graf_generisanje_kljuca(df: pd.DataFrame):
@@ -290,9 +254,6 @@ def graf_generisanje_kljuca(df: pd.DataFrame):
     return fig
 
 
-# ---------------------------------------------------------------------------
-# Graf 3: direktno poredjenje pri fiksnoj velicini
-# ---------------------------------------------------------------------------
 
 @serijalizovano
 def graf_poredjenje(df: pd.DataFrame, velicina=POREDBENA_VELICINA):
@@ -376,9 +337,6 @@ def snimi(fig, ime: str) -> str:
     return putanja
 
 
-# ---------------------------------------------------------------------------
-# Tabela sirovih brojeva
-# ---------------------------------------------------------------------------
 
 def ispisi_tabelu(df: pd.DataFrame):
     """Sazeta tabela za brzu kontrolu - puna tabela je u aplikaciji ispod grafova."""

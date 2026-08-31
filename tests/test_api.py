@@ -1,15 +1,4 @@
-"""
-Provjera Flask API-ja (web/api.py) — svaka ruta koju frontend poziva.
 
-Frontend je u TypeScriptu i provjerava se kompajlerom; ovdje se provjerava
-strana koja stvarno radi kriptografiju.
-
-Posebna pažnja na jednu stvar koju je lako previdjeti: veliki cijeli brojevi
-(RSA modul, DH vrijednosti) moraju putovati kao STRINGOVI. JavaScript tip
-number tačno predstavlja samo do 2^53, pa bi ih inače tiho zaokružio.
-
-Pokreni: python tests/test_api.py
-"""
 import os
 import sys
 
